@@ -1,4 +1,4 @@
-# Hebrew Spoken-Time Web Clock — Technical Specification
+# Hebrew Spoken-Time Web Clock — Technical Specification v1.3
 
 ## 1. Overview
 
@@ -11,14 +11,26 @@ Example outputs:
 - `קצת לפני רבע לארבע` (approaching 3:45)
 - `אחת עשרה בלילה` (11 PM)
 
+With niqqud enabled:
+
+- `שָׁלוֹשׁ וְרֶבַע בַּבֹּקֶר`
+- `קְצָת לִפְנֵי רֶבַע לְאַרְבַּע`
+
 ---
 
-## 2. Technology
+## 2. Technology & File Structure
 
 - **Single HTML file** — all CSS and JS inline, no frameworks
-- **Font**: Google Fonts — `Heebo` weights 200, 300, 400
-- **No dependencies** beyond the Google Fonts CDN link
-- **Browser APIs used**: `Date`, `setInterval`, `localStorage`
+- **Fonts**: Google Fonts (Heebo, Rubik, Frank Ruhl Libre, Secular One, Suez One, Bellefair) + one custom font
+- **Custom font file**: `fonts/fridge_Regular.ttf` — loaded via `@font-face`
+- **Browser APIs used**: `Date`, `setInterval`, `localStorage`, `navigator.geolocation`
+
+```
+heb-clock-web/
+├── index.html
+└── fonts/
+    └── fridge_Regular.ttf
+```
 
 ---
 
@@ -112,7 +124,9 @@ Based on `delta` from section 3.4:
 | `delta < -60`          | `קצת לפני`        | `קְצָת לִפְנֵי`       |
 | `delta > +60`          | `קצת אחרי`        | `קְצָת אַחֲרֵי`       |
 
-When present, the modifier is prepended to the phrase with a space: `modifier + ' ' + phrase`.
+The modifier can be displayed in two layout modes (see §5.4):
+- **Inline** (default): prepended to the phrase with a space
+- **Split**: shown on a separate line above the main phrase, same font size
 
 ### 3.6 Day-Part Suffix
 
@@ -148,34 +162,68 @@ The **effective hour** for the suffix depends on the anchor minute:
 ### 4.1 Structure (top to bottom, vertically centered)
 
 ```
-          [digital time]           ← small, gray (optional)
-         [modifier line]           ← same size as main (optional, see §5.3)
+          [digital time]           ← small, gray (hidden by default)
+         [modifier line]           ← same size as main (optional, only in split mode)
         [hebrew phrase]            ← large, main display
          [day-part suffix]         ← smaller
+
+      ─── settings handle ───      ← thin pill at bottom center
 ```
 
 All elements are horizontally centered. The page is `dir="rtl"` with `lang="he"`.
 
-### 4.2 Visual Design
+### 4.2 Light Theme (default)
 
-| Property          | Value                           |
-|-------------------|---------------------------------|
-| Background        | `#ffffff` (white)               |
-| Text color        | `#1a1a1a` (all lines, uniform)  |
-| Font family       | `Heebo` (Google Fonts)          |
-| Main text weight  | 300 (light)                     |
-| Main text size    | `clamp(2.2rem, 6.5vw, 5.5rem)` |
-| Day-part size     | `clamp(1.2rem, 3vw, 2.4rem)`   |
-| Digital clock size| `clamp(0.95rem, 1.8vw, 1.3rem)`|
-| Digital clock color| `#bbb`                         |
+| Property            | Value                       |
+|---------------------|-----------------------------|
+| Background          | `#ffffff`                    |
+| Text color          | `#1a1a1a` (all lines)        |
+| Digital clock color | `#bbb`                       |
+| Settings panel bg   | `#f5f5f5`                    |
+| Settings buttons    | `#e8e8e8`, hover `#ddd`      |
+| Handle pill         | `#d0d0d0`, hover `#aaa`      |
+| Version text        | `#bbb`                       |
 
-### 4.3 Font Size Stability
+### 4.3 Dark Theme
 
-The font size must **not** change when the text content changes length. Use viewport-relative units (`vw`) with `clamp()` for responsive sizing. Use `white-space: nowrap` on the main phrase to prevent line wrapping.
+Applied via `body.dark` CSS class.
 
-### 4.4 Transition Animation
+| Property            | Value                       |
+|---------------------|-----------------------------|
+| Background          | `#121212`                    |
+| Text color          | `#e8e8e8` (all lines)        |
+| Digital clock color | `#555`                       |
+| Settings panel bg   | `#252525`                    |
+| Settings buttons    | `#3a3a3a`, hover `#484848`   |
+| Handle pill         | `#444`, hover `#666`         |
+| Version text        | `#444`                       |
+| Separators          | `#444`                       |
 
-When the displayed text changes, all text elements fade out (opacity → 0), swap content, then fade back in. Transition duration: **350ms** in normal mode, **60ms** in demo mode.
+### 4.4 Typography
+
+| Element        | Font family    | Weight | Size                          |
+|---------------|----------------|--------|-------------------------------|
+| Body          | Heebo          | —      | —                             |
+| Main phrase   | User-selected  | varies | `max(2.5rem, Xvw)` where X is adjustable (default 6.5) |
+| Modifier line | User-selected  | varies | Same as main phrase           |
+| Day-part      | User-selected  | varies | `max(1.3rem, 3vw)`           |
+| Digital clock | Heebo          | 400    | `clamp(1rem, 2.5vw, 1.3rem)` |
+| Settings UI   | Heebo          | 400    | `0.85rem`                     |
+
+The `max()` function ensures a minimum floor of 2.5rem on mobile screens.
+
+### 4.5 Font Size Stability
+
+The font size must **not** change when the text content changes length. Use viewport-relative units (`vw`) with `max()` for responsive sizing. Use `white-space: nowrap` on the main phrase.
+
+### 4.6 Transition Animation
+
+When the displayed text changes, all text elements fade out (opacity → 0), swap content, then fade back in.
+
+| Mode   | Fade duration |
+|--------|--------------|
+| Normal | 350ms        |
+| Demo   | 60ms         |
 
 If a new change occurs while a fade is in progress, cancel the pending timeout and start a new fade cycle.
 
@@ -183,90 +231,160 @@ If a new change occurs while a fade is in progress, cancel the pending timeout a
 
 ## 5. Settings Panel
 
-### 5.1 Behavior
+### 5.1 Discoverability
 
-- Fixed to the **bottom center** of the viewport
-- **Hidden by default** — slides up and fades in when the user hovers the bottom edge of the screen
-- Appears as a horizontal bar with rounded top corners, light gray background (`#f5f5f5`)
-- Contains button groups separated by 1px vertical dividers
+A **settings handle** (thin horizontal pill, 36×3px) is always visible at the bottom center of the screen.
 
-### 5.2 Font Size Control
+- **First visit**: the handle pulses gently 3 times (opacity animation, 2s per cycle) to hint that it's interactive. After the animation or on first click, `localStorage` key `hc_seen` is set to `'1'` to suppress future hints.
+- **Hover** (desktop): the pill widens from 36px to 48px and darkens.
+- **Click/tap**: opens the settings panel. The handle hides while the panel is open.
+- **Click outside** the panel: closes it and restores the handle.
+
+### 5.2 Panel Behavior
+
+- Fixed to the bottom center of the viewport.
+- On **desktop**: also appears on hover over the bottom edge (via `.settings-zone:hover`).
+- On **mobile** (≤600px): flex-wraps into multiple rows, separators are hidden, button sizes increase slightly.
+- Shows/hides with a 300ms ease slide + opacity transition.
+
+### 5.3 Font Family Selector
+
+- **UI element**: `<select>` dropdown styled as a rounded button
+- **Available fonts**:
+
+| ID         | Name              | CSS Family                      | Weight | Niqqud support |
+|-----------|-------------------|--------------------------------|--------|----------------|
+| `heebo`    | Heebo             | `'Heebo', sans-serif`           | 300    | Yes            |
+| `rubik`    | Rubik             | `'Rubik', sans-serif`           | 300    | Yes            |
+| `frank`    | Frank Ruhl Libre  | `'Frank Ruhl Libre', serif`     | 400    | Yes            |
+| `secular`  | Secular One       | `'Secular One', sans-serif`     | 400    | Yes            |
+| `suez`     | Suez One          | `'Suez One', serif`             | 400    | Yes            |
+| `bellefair`| Bellefair         | `'Bellefair', serif`            | 400    | Yes            |
+| `fridge`   | Fridge            | `'Fridge', sans-serif`          | 400    | **No**         |
+
+- Font is applied to the main phrase, modifier line, and day-part suffix. The settings panel always uses Heebo.
+- **Fridge + niqqud interaction**: when Fridge is selected, niqqud is forced off and the niqqud toggle button is disabled (grayed out). When switching away from Fridge, the niqqud button is re-enabled.
+- Persisted in `localStorage` key `hc_font` (default: `heebo`)
+
+### 5.4 Font Size Control
 
 - Label: `גודל`
 - Two buttons: `−` and `+`
 - Adjusts the main Hebrew text and modifier line font size in **0.5vw** increments
+- Applied as `max(2.5rem, Xvw)` to maintain a mobile floor
 - Range: **1.5vw** to **10vw**
 - Persisted in `localStorage` key `hc_fontVW` (default: `6.5`)
 
-### 5.3 Modifier Split Toggle
+### 5.5 Digital Clock Toggle
+
+- Toggle button:
+  - `הצג שעון` → click to **show** the digital time (HH:MM:SS)
+  - `הסתר שעון` → click to **hide** it
+- Digital clock displays in `tabular-nums` with letter-spacing for clean appearance
+- Persisted in `localStorage` key `hc_digital` (`visible` / `hidden`, default: **hidden**)
+
+### 5.6 Modifier Split Toggle
 
 - Toggle button with two states:
   - `קצת — שורה נפרדת` → click to **enable** split mode
   - `קצת — שורה אחת` → click to return to inline mode
-- **Inline mode** (default): modifier is prepended to the main phrase on one line
-- **Split mode**: modifier appears on its own line above the main phrase, same font size
+- **Inline mode**: modifier is prepended to the main phrase on one line
+- **Split mode** (default): modifier appears on its own line above the main phrase, same font size and color
 - Persisted in `localStorage` key `hc_split` (default: `true`)
 
-### 5.4 Digital Clock Toggle
-
-- Toggle button:
-  - `הסתר שעון` → click to **hide** the digital time
-  - `הצג שעון` → click to **show** it
-- Persisted in `localStorage` key `hc_digital` (`visible` / `hidden`, default: `visible`)
-
-### 5.5 Niqqud Toggle
+### 5.7 Niqqud Toggle
 
 - Toggle button:
   - `ניקוד` → click to **enable** niqqud (vowel diacritics)
   - `ללא ניקוד` → click to return to plain text
-- Switches all displayed Hebrew text (hour names, minute phrases, modifiers, day-part suffixes) to their niqqud variants from the data tables in §3
-- Persisted in `localStorage` key `hc_niqqud` (`true` / `false`, default: `false`)
+- Switches **all** displayed Hebrew text to niqqud variants from the data tables in §3
+- **Disabled** (grayed out) when a font without niqqud support is selected (e.g., Fridge)
+- Persisted in `localStorage` key `hc_niqqud` (`true` / `false`, default: **true**)
 
-### 5.6 Demo Mode
+### 5.8 Theme Toggle (Night Mode)
+
+- Cycling button with three states:
+  - `תצוגה: אוטו` → auto mode (default)
+  - `תצוגה: יום` → always light
+  - `תצוגה: לילה` → always dark
+- **Auto mode** behavior:
+  - Requests browser geolocation on first use; coordinates are cached in `localStorage` keys `hc_lat` and `hc_lng`
+  - Uses a solar declination formula to calculate sunrise/sunset for the current date and location
+  - Dark mode is active when `currentHour < sunrise || currentHour >= sunset`
+  - If geolocation is denied or unavailable, falls back to fixed times: sunrise 06:00, sunset 18:00
+  - Rechecks every 60 seconds
+- Persisted in `localStorage` key `hc_theme` (`auto` / `day` / `night`, default: `auto`)
+
+**Sunset calculation (simplified solar declination):**
+
+```
+dayOfYear   = days since Jan 1
+declination = -23.45 * cos(radians(360/365 * (dayOfYear + 10)))
+cosH        = (sin(-0.833°) - sin(lat) * sin(dec)) / (cos(lat) * cos(dec))
+hourAngle   = acos(cosH) in degrees / 15  (hours)
+solarNoon   = 12 + (timezoneOffsetHours * 15 - longitude) / 15
+sunrise     = solarNoon - hourAngle
+sunset      = solarNoon + hourAngle
+```
+
+Accuracy: ±15 minutes, sufficient for a theme toggle.
+
+### 5.9 Demo Mode
 
 - Toggle button:
   - `דמו` → click to **start** demo
-  - `עצור דמו` (red-tinted button) → click to **stop** and return to real time
+  - `עצור דמו` (red-tinted button) → click to **stop**
 - When active:
   - Time advances by **20 seconds** of simulated time every **400ms** of real time (~50x speed)
   - The digital clock shows the simulated time
   - Fade transition duration is reduced to **60ms**
   - A full hour cycles through in ~6 seconds
-- When stopped: immediately returns to real time with normal 1-second tick interval
+- When stopped: immediately returns to real time with normal 1-second tick
+- Red tint adapts to light/dark theme
 - **Not persisted** — always starts in real-time mode on page load
 
-### 5.7 Settings Panel Visual Spec
+### 5.10 Version Number
 
-| Property          | Value                     |
-|-------------------|---------------------------|
-| Background        | `#f5f5f5`                 |
-| Height            | 48px                      |
-| Border radius     | 12px 12px 0 0             |
-| Button size       | 32×32px                   |
-| Button background | `#e8e8e8`, hover `#ddd`   |
-| Button radius     | 8px                       |
-| Gap between groups| 1.2rem                    |
-| Divider           | 1px × 20px, color `#ddd`  |
-| Hover zone height | 60px (extends below panel)|
-| Show transition   | 300ms ease (transform + opacity) |
-| Demo active button| bg `#fde8e8`, color `#c0392b`    |
+- Displayed as small gray text at the end of the settings panel
+- Format: `v1.3`
+- Should be bumped with each change
+
+### 5.11 Settings Panel Visual Spec
+
+| Property          | Light            | Dark              |
+|-------------------|------------------|-------------------|
+| Background        | `#f5f5f5`        | `#252525`         |
+| Border radius     | 12px 12px 0 0    | same              |
+| Button size       | 36×36px          | same              |
+| Button background | `#e8e8e8`        | `#3a3a3a`         |
+| Button hover      | `#ddd`           | `#484848`         |
+| Button radius     | 8px              | same              |
+| Gap between groups| 1.2rem           | same              |
+| Divider           | 1px × 20px `#ddd`| 1px × 20px `#444` |
+| Demo active bg    | `#fde8e8`        | `#3a1a1a`         |
+| Demo active text  | `#c0392b`        | `#e74c3c`         |
 
 ---
 
 ## 6. localStorage Keys Summary
 
-| Key          | Type    | Default     | Description                        |
-|-------------|---------|-------------|------------------------------------|
-| `hc_fontVW` | float   | `6.5`       | Main text font size in vw units    |
-| `hc_digital`| string  | `visible`   | Digital clock visibility           |
-| `hc_split`  | string  | `true`      | Modifier on separate line          |
-| `hc_niqqud` | string  | `false`     | Enable niqqud diacritics           |
+| Key          | Type    | Default     | Description                         |
+|-------------|---------|-------------|-------------------------------------|
+| `hc_fontVW` | float   | `6.5`       | Main text font size in vw units     |
+| `hc_font`   | string  | `heebo`     | Selected font family ID             |
+| `hc_digital`| string  | `hidden`    | Digital clock visibility            |
+| `hc_split`  | string  | `true`      | Modifier on separate line           |
+| `hc_niqqud` | string  | `true`      | Enable niqqud diacritics            |
+| `hc_theme`  | string  | `auto`      | Theme mode (auto/day/night)         |
+| `hc_lat`    | float   | *(none)*    | Cached geolocation latitude         |
+| `hc_lng`    | float   | *(none)*    | Cached geolocation longitude        |
+| `hc_seen`   | string  | *(none)*    | Set to `'1'` after first interaction|
 
 ---
 
 ## 7. Complete Text Data Reference
 
-This section provides the exact strings the application must use. An implementer should store these as two parallel data objects (plain and niqqud) and switch between them based on the niqqud setting.
+Store as two parallel data objects (plain and niqqud). Switch between them based on the niqqud setting.
 
 ### 7.1 Plain Text Set
 
@@ -348,10 +466,23 @@ function getHebrewTime(date):
 
 ---
 
-## 9. Edge Cases
+## 9. Mobile Responsiveness (≤600px)
+
+- Font sizes use `max(2.5rem, Xvw)` to guarantee a readable minimum
+- Settings panel wraps into multiple rows via `flex-wrap: wrap`
+- Vertical separator lines are hidden
+- Button touch targets increase to 38px height
+- Settings handle is always visible (not hover-dependent)
+
+---
+
+## 10. Edge Cases
 
 1. **Midnight (00:00)** → hour 12 → `שתים עשרה בלילה`
 2. **Noon (12:00)** → hour 12 → `שתים עשרה` (no suffix, 10–17 range)
 3. **Hour wrap via anchor rounding** — e.g., at 23:57:30, anchor rounds to 00:00 of next day → hour becomes 0 → displays hour 12 with `בלילה`
 4. **Anchor at :45/:50/:55** — phrase references next hour; effective hour for suffix is also next hour
 5. **Day-part boundary at :45** — e.g., 21:45 → "רבע לעשר בלילה" (suffix based on hour 22, which is "night")
+6. **Fridge font selected** — niqqud is forced off and toggle disabled; switching to another font re-enables the toggle
+7. **Geolocation denied** — auto theme falls back to sunrise=06:00, sunset=18:00
+8. **Polar latitudes** — if `|cosH| > 1`, sunset calculation returns null and fixed times are used
