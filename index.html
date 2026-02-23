@@ -371,7 +371,7 @@
             <div class="group">
                 <button class="toggle-btn" id="toggleDemo">דמו</button>
             </div>
-            <span class="version">v1.4</span>
+            <span class="version">v1.5</span>
         </div>
     </div>
 
@@ -591,8 +591,8 @@
         fridge:   { family: "'Fridge', sans-serif",           weight: 400, niqqud: false },
     };
 
-    let currentFontId = localStorage.getItem('hc_font') || 'heebo';
-    if (!FONTS[currentFontId]) currentFontId = 'heebo';
+    let currentFontId = localStorage.getItem('hc_font') || 'secular';
+    if (!FONTS[currentFontId]) currentFontId = 'secular';
 
     const elFontSelect = document.getElementById('fontFamily');
     const elNiqqudBtn  = document.getElementById('toggleNiqqud');
