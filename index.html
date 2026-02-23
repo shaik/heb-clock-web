@@ -28,21 +28,21 @@
         }
 
         .digital-time {
-            font-size: clamp(0.95rem, 1.8vw, 1.3rem);
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
             font-weight: 400;
             color: #bbb;
             letter-spacing: 0.15em;
-            margin-bottom: 2.5rem;
+            margin-bottom: 2rem;
             font-variant-numeric: tabular-nums;
         }
 
         .hebrew-time {
-            font-size: clamp(2.2rem, 6.5vw, 5.5rem);
+            font-size: max(2.5rem, 6.5vw);
             font-weight: 300;
             text-align: center;
             direction: rtl;
-            line-height: 1.5;
-            padding: 0 1.5rem;
+            line-height: 1.4;
+            padding: 0 1rem;
             transition: opacity 0.35s ease;
             white-space: nowrap;
         }
@@ -52,7 +52,7 @@
         }
 
         .modifier {
-            font-size: clamp(2.2rem, 6.5vw, 5.5rem);
+            font-size: max(2.5rem, 6.5vw);
             font-weight: 300;
             color: #1a1a1a;
             text-align: center;
@@ -72,7 +72,7 @@
 
         .day-part {
             display: block;
-            font-size: clamp(1.2rem, 3vw, 2.4rem);
+            font-size: max(1.3rem, 3vw);
             font-weight: 300;
             color: #1a1a1a;
             margin-top: 0.6rem;
@@ -92,19 +92,19 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 60px;
             display: flex;
             justify-content: center;
+            z-index: 10;
         }
 
         .settings-panel {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 1.2rem;
             background: #f5f5f5;
             border-radius: 12px 12px 0 0;
-            padding: 0 1.6rem;
-            height: 48px;
+            padding: 0.6rem 1.6rem;
             transform: translateY(100%);
             transition: transform 0.3s ease, opacity 0.3s ease;
             opacity: 0;
@@ -114,9 +114,32 @@
             user-select: none;
         }
 
-        .settings-zone:hover .settings-panel {
+        .settings-zone:hover .settings-panel,
+        .settings-panel.open {
             transform: translateY(0);
             opacity: 1;
+        }
+
+        .settings-handle {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 48px;
+            height: 22px;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 11;
+        }
+
+        .settings-handle span {
+            width: 32px;
+            height: 4px;
+            border-radius: 2px;
+            background: #ccc;
+            margin-bottom: 6px;
         }
 
         .settings-panel .group {
@@ -132,8 +155,8 @@
         }
 
         .settings-panel button {
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             border: none;
             border-radius: 8px;
             background: #e8e8e8;
@@ -158,8 +181,34 @@
         .toggle-btn {
             width: auto !important;
             padding: 0 12px !important;
-            font-size: 0.8rem !important;
+            font-size: 0.85rem !important;
             white-space: nowrap;
+        }
+
+        @media (max-width: 600px) {
+            .settings-handle {
+                display: flex;
+            }
+
+            .settings-panel {
+                flex-wrap: wrap;
+                gap: 0.6rem 1rem;
+                padding: 0.7rem 1rem;
+                max-width: 100vw;
+            }
+
+            .settings-panel .sep {
+                display: none;
+            }
+
+            .settings-panel button {
+                height: 38px;
+            }
+
+            .toggle-btn {
+                padding: 0 14px !important;
+                font-size: 0.85rem !important;
+            }
         }
     </style>
 </head>
@@ -169,8 +218,9 @@
     <div class="hebrew-time" id="hebrewTime"></div>
     <div class="day-part" id="dayPart"></div>
 
+    <div class="settings-handle" id="settingsHandle"><span></span></div>
     <div class="settings-zone">
-        <div class="settings-panel">
+        <div class="settings-panel" id="settingsPanel">
             <div class="group">
                 <span>גודל</span>
                 <button id="fontDec">&minus;</button>
@@ -232,7 +282,8 @@
         morning: 'בַּבֹּקֶר', evening: 'בָּעֶרֶב', night: 'בַּלַּיְלָה',
     };
 
-    let useNiqqud = localStorage.getItem('hc_niqqud') === 'true';
+    const niqqudStored = localStorage.getItem('hc_niqqud');
+    let useNiqqud = niqqudStored === null ? true : niqqudStored === 'true';
     let txt = useNiqqud ? NIQQUD : PLAIN;
 
     function to12(h24) {
@@ -407,8 +458,9 @@
     let digitalVisible = localStorage.getItem('hc_digital') !== 'hidden';
 
     function applyFont() {
-        elHebrew.style.fontSize = fontVW + 'vw';
-        elModifier.style.fontSize = fontVW + 'vw';
+        const size = 'max(2.5rem, ' + fontVW + 'vw)';
+        elHebrew.style.fontSize = size;
+        elModifier.style.fontSize = size;
         localStorage.setItem('hc_fontVW', fontVW);
     }
 
@@ -485,6 +537,23 @@
             startDemo();
         }
         applyDemo();
+    });
+
+    const elPanel = document.getElementById('settingsPanel');
+    const elHandle = document.getElementById('settingsHandle');
+
+    elHandle.addEventListener('click', () => {
+        elPanel.classList.toggle('open');
+        elHandle.style.display = elPanel.classList.contains('open') ? 'none' : '';
+    });
+
+    document.addEventListener('click', (e) => {
+        if (elPanel.classList.contains('open') &&
+            !elPanel.contains(e.target) &&
+            e.target !== elHandle && !elHandle.contains(e.target)) {
+            elPanel.classList.remove('open');
+            elHandle.style.display = '';
+        }
     });
     </script>
 </body>
