@@ -128,13 +128,13 @@
         }
 
         .settings-handle {
-            position: absolute;
+            position: fixed;
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
             width: 48px;
-            height: 22px;
-            display: none;
+            height: 18px;
+            display: flex;
             align-items: flex-end;
             justify-content: center;
             cursor: pointer;
@@ -142,11 +142,34 @@
         }
 
         .settings-handle span {
-            width: 32px;
-            height: 4px;
+            width: 36px;
+            height: 3px;
             border-radius: 2px;
-            background: #ccc;
-            margin-bottom: 6px;
+            background: #d0d0d0;
+            margin-bottom: 7px;
+            transition: background 0.2s ease, width 0.2s ease;
+        }
+
+        .settings-handle:hover span {
+            width: 48px;
+            background: #aaa;
+        }
+
+        .settings-handle.hint span {
+            animation: handleHint 2s ease-in-out 3;
+        }
+
+        @keyframes handleHint {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        body.dark .settings-handle span {
+            background: #444;
+        }
+
+        body.dark .settings-handle:hover span {
+            background: #666;
         }
 
         .settings-panel .group {
@@ -271,10 +294,6 @@
             background-position: 8px center;
         }
 
-        body.dark .settings-handle span {
-            background: #555;
-        }
-
         body.dark .version {
             color: #444;
         }
@@ -284,10 +303,6 @@
         }
 
         @media (max-width: 600px) {
-            .settings-handle {
-                display: flex;
-            }
-
             .settings-panel {
                 flex-wrap: wrap;
                 gap: 0.6rem 1rem;
@@ -356,7 +371,7 @@
             <div class="group">
                 <button class="toggle-btn" id="toggleDemo">דמו</button>
             </div>
-            <span class="version">v1.3</span>
+            <span class="version">v1.4</span>
         </div>
     </div>
 
@@ -768,7 +783,17 @@
     const elPanel = document.getElementById('settingsPanel');
     const elHandle = document.getElementById('settingsHandle');
 
+    if (!localStorage.getItem('hc_seen')) {
+        elHandle.classList.add('hint');
+        elHandle.addEventListener('animationend', () => {
+            elHandle.classList.remove('hint');
+            localStorage.setItem('hc_seen', '1');
+        }, { once: true });
+    }
+
     elHandle.addEventListener('click', () => {
+        elHandle.classList.remove('hint');
+        localStorage.setItem('hc_seen', '1');
         elPanel.classList.toggle('open');
         elHandle.style.display = elPanel.classList.contains('open') ? 'none' : '';
     });
