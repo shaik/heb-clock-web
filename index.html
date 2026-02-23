@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שעון עברי</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@200;300;400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #fff;
+            color: #1a1a1a;
+            font-family: 'Heebo', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100dvh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .digital-time {
+            font-size: clamp(0.95rem, 1.8vw, 1.3rem);
+            font-weight: 400;
+            color: #bbb;
+            letter-spacing: 0.15em;
+            margin-bottom: 2.5rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .hebrew-time {
+            font-size: clamp(2.2rem, 6.5vw, 5.5rem);
+            font-weight: 300;
+            text-align: center;
+            direction: rtl;
+            line-height: 1.5;
+            padding: 0 1.5rem;
+            transition: opacity 0.35s ease;
+            white-space: nowrap;
+        }
+
+        .hebrew-time.fade {
+            opacity: 0;
+        }
+
+        .modifier {
+            font-size: clamp(2.2rem, 6.5vw, 5.5rem);
+            font-weight: 300;
+            color: #1a1a1a;
+            text-align: center;
+            direction: rtl;
+            margin-bottom: 0.3rem;
+            min-height: 0;
+            transition: opacity 0.35s ease;
+        }
+
+        .modifier:empty {
+            display: none;
+        }
+
+        .modifier.fade {
+            opacity: 0;
+        }
+
+        .day-part {
+            display: block;
+            font-size: clamp(1.2rem, 3vw, 2.4rem);
+            font-weight: 300;
+            color: #1a1a1a;
+            margin-top: 0.6rem;
+            transition: opacity 0.35s ease;
+        }
+
+        .day-part.fade {
+            opacity: 0;
+        }
+
+        .digital-time.hidden {
+            display: none;
+        }
+
+        .settings-zone {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .settings-panel {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            background: #f5f5f5;
+            border-radius: 12px 12px 0 0;
+            padding: 0 1.6rem;
+            height: 48px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: #666;
+            user-select: none;
+        }
+
+        .settings-zone:hover .settings-panel {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .settings-panel .group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .settings-panel .sep {
+            width: 1px;
+            height: 20px;
+            background: #ddd;
+        }
+
+        .settings-panel button {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 8px;
+            background: #e8e8e8;
+            color: #444;
+            font-size: 1.1rem;
+            font-family: 'Heebo', sans-serif;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s ease;
+        }
+
+        .settings-panel button:hover {
+            background: #ddd;
+        }
+
+        .settings-panel button:active {
+            background: #ccc;
+        }
+
+        .toggle-btn {
+            width: auto !important;
+            padding: 0 12px !important;
+            font-size: 0.8rem !important;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="digital-time" id="digitalTime"></div>
+    <div class="modifier" id="modifier"></div>
+    <div class="hebrew-time" id="hebrewTime"></div>
+    <div class="day-part" id="dayPart"></div>
+
+    <div class="settings-zone">
+        <div class="settings-panel">
+            <div class="group">
+                <span>גודל</span>
+                <button id="fontDec">&minus;</button>
+                <button id="fontInc">+</button>
+            </div>
+            <div class="sep"></div>
+            <div class="group">
+                <button class="toggle-btn" id="toggleDigital">הסתר שעון</button>
+            </div>
+            <div class="sep"></div>
+            <div class="group">
+                <button class="toggle-btn" id="toggleSplit">קצת — שורה נפרדת</button>
+            </div>
+            <div class="sep"></div>
+            <div class="group">
+                <button class="toggle-btn" id="toggleNiqqud">ניקוד</button>
+            </div>
+            <div class="sep"></div>
+            <div class="group">
+                <button class="toggle-btn" id="toggleDemo">דמו</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const PLAIN = {
+        hours: {
+            1: 'אחת', 2: 'שתיים', 3: 'שלוש', 4: 'ארבע', 5: 'חמש', 6: 'שש',
+            7: 'שבע', 8: 'שמונה', 9: 'תשע', 10: 'עשר',
+            11: 'אחת עשרה', 12: 'שתים עשרה'
+        },
+        hoursL: {
+            1: 'לאחת', 2: 'לשתיים', 3: 'לשלוש', 4: 'לארבע', 5: 'לחמש', 6: 'לשש',
+            7: 'לשבע', 8: 'לשמונה', 9: 'לתשע', 10: 'לעשר',
+            11: 'לאחת עשרה', 12: 'לשתים עשרה'
+        },
+        m5: ' וחמישה', m10: ' ועשרה', m15: ' ורבע', m20: ' ועשרים',
+        m25: ' עשרים וחמש', m30: ' וחצי', m35: ' שלושים וחמש', m40: ' ארבעים',
+        p45: 'רבע ', p50: 'עשרה ', p55: 'חמישה ',
+        before: 'קצת לפני', after: 'קצת אחרי',
+        morning: 'בבוקר', evening: 'בערב', night: 'בלילה',
+    };
+
+    const NIQQUD = {
+        hours: {
+            1: 'אַחַת', 2: 'שְׁתַּיִם', 3: 'שָׁלוֹשׁ', 4: 'אַרְבַּע', 5: 'חָמֵשׁ', 6: 'שֵׁשׁ',
+            7: 'שֶׁבַע', 8: 'שְׁמוֹנֶה', 9: 'תֵּשַׁע', 10: 'עֶשֶׂר',
+            11: 'אַחַת עֶשְׂרֵה', 12: 'שְׁתֵּים עֶשְׂרֵה'
+        },
+        hoursL: {
+            1: 'לְאַחַת', 2: 'לִשְׁתַּיִם', 3: 'לְשָׁלוֹשׁ', 4: 'לְאַרְבַּע', 5: 'לְחָמֵשׁ', 6: 'לְשֵׁשׁ',
+            7: 'לְשֶׁבַע', 8: 'לִשְׁמוֹנֶה', 9: 'לְתֵּשַׁע', 10: 'לְעֶשֶׂר',
+            11: 'לְאַחַת עֶשְׂרֵה', 12: 'לִשְׁתֵּים עֶשְׂרֵה'
+        },
+        m5: ' וַחֲמִישָׁה', m10: ' וַעֲשָׂרָה', m15: ' וְרֶבַע', m20: ' וְעֶשְׂרִים',
+        m25: ' עֶשְׂרִים וְחָמֵשׁ', m30: ' וְחֵצִי', m35: ' שְׁלוֹשִׁים וְחָמֵשׁ', m40: ' אַרְבָּעִים',
+        p45: 'רֶבַע ', p50: 'עֲשָׂרָה ', p55: 'חֲמִישָׁה ',
+        before: 'קְצָת לִפְנֵי', after: 'קְצָת אַחֲרֵי',
+        morning: 'בַּבֹּקֶר', evening: 'בָּעֶרֶב', night: 'בַּלַּיְלָה',
+    };
+
+    let useNiqqud = localStorage.getItem('hc_niqqud') === 'true';
+    let txt = useNiqqud ? NIQQUD : PLAIN;
+
+    function to12(h24) {
+        const h = ((h24 % 24) + 24) % 24 % 12;
+        return h === 0 ? 12 : h;
+    }
+
+    function buildPhrase(anchorHour24, anchorMinute) {
+        const h = to12(anchorHour24);
+        const name = txt.hours[h];
+
+        switch (anchorMinute) {
+            case 0:  return name;
+            case 5:  return name + txt.m5;
+            case 10: return name + txt.m10;
+            case 15: return name + txt.m15;
+            case 20: return name + txt.m20;
+            case 25: return name + txt.m25;
+            case 30: return name + txt.m30;
+            case 35: return name + txt.m35;
+            case 40: return name + txt.m40;
+            case 45: return txt.p45 + txt.hoursL[to12(anchorHour24 + 1)];
+            case 50: return txt.p50 + txt.hoursL[to12(anchorHour24 + 1)];
+            case 55: return txt.p55 + txt.hoursL[to12(anchorHour24 + 1)];
+            default: return name;
+        }
+    }
+
+    function dayPartSuffix(hour24) {
+        const h = ((hour24 % 24) + 24) % 24;
+        if (h >= 5  && h <= 9)  return txt.morning;
+        if (h >= 10 && h <= 17) return '';
+        if (h >= 18 && h <= 21) return txt.evening;
+        return txt.night;
+    }
+
+    function getHebrewTime(date) {
+        const hour24  = date.getHours();
+        const minute  = date.getMinutes();
+        const second  = date.getSeconds();
+
+        const t = 60 * minute + second;
+        const ANCHOR_STEP  = 300;
+        const EXACT_WINDOW = 60;
+
+        let anchorSec = Math.round(t / ANCHOR_STEP) * ANCHOR_STEP;
+        const delta = t - anchorSec;
+
+        let anchorHour   = hour24;
+        let anchorMinute = anchorSec / 60;
+
+        if (anchorMinute >= 60) {
+            anchorMinute = 0;
+            anchorHour = (anchorHour + 1) % 24;
+        }
+
+        const phrase = buildPhrase(anchorHour, anchorMinute);
+
+        let modifier = '';
+        if (delta < -EXACT_WINDOW)      modifier = txt.before;
+        else if (delta > EXACT_WINDOW)  modifier = txt.after;
+
+        const effectiveHour = anchorMinute >= 45
+            ? (anchorHour + 1) % 24
+            : anchorHour;
+
+        return { modifier, phrase, suffix: dayPartSuffix(effectiveHour) };
+    }
+
+    function pad2(n) { return String(n).padStart(2, '0'); }
+
+    const elDigital  = document.getElementById('digitalTime');
+    const elModifier = document.getElementById('modifier');
+    const elHebrew   = document.getElementById('hebrewTime');
+    const elDayPart  = document.getElementById('dayPart');
+
+    let prevDisplay = '';
+    let splitModifier = localStorage.getItem('hc_split') !== 'false';
+
+    let fadeTimeout = null;
+
+    function renderTime(modifier, phrase, suffix) {
+        let modLine = '';
+        let mainLine = phrase;
+
+        if (modifier) {
+            if (splitModifier) {
+                modLine = modifier;
+            } else {
+                mainLine = modifier + ' ' + phrase;
+            }
+        }
+
+        const display = modLine + '|' + mainLine + '|' + suffix;
+        if (display === prevDisplay) return;
+
+        if (fadeTimeout) { clearTimeout(fadeTimeout); fadeTimeout = null; }
+
+        const fadeMs = demoMode ? 60 : 350;
+
+        elModifier.classList.add('fade');
+        elHebrew.classList.add('fade');
+        elDayPart.classList.add('fade');
+
+        fadeTimeout = setTimeout(() => {
+            elModifier.textContent = modLine;
+            elHebrew.textContent = mainLine;
+            elDayPart.textContent = suffix;
+            elModifier.classList.remove('fade');
+            elHebrew.classList.remove('fade');
+            elDayPart.classList.remove('fade');
+            prevDisplay = display;
+            fadeTimeout = null;
+        }, fadeMs);
+    }
+
+    let lastTime = null;
+    let demoMode = false;
+    let demoDate = null;
+    let tickInterval = null;
+    const DEMO_STEP = 20_000;
+    const DEMO_TICK = 400;
+
+    function tick() {
+        let now;
+        if (demoMode) {
+            now = demoDate;
+            demoDate = new Date(demoDate.getTime() + DEMO_STEP);
+        } else {
+            now = new Date();
+        }
+
+        elDigital.textContent = pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds());
+
+        const { modifier, phrase, suffix } = getHebrewTime(now);
+        lastTime = { modifier, phrase, suffix };
+        renderTime(modifier, phrase, suffix);
+    }
+
+    function startTicker() {
+        clearInterval(tickInterval);
+        tick();
+        tickInterval = setInterval(tick, demoMode ? DEMO_TICK : 1000);
+    }
+
+    function startDemo() {
+        demoMode = true;
+        demoDate = new Date();
+        elModifier.style.transitionDuration = '0.06s';
+        elHebrew.style.transitionDuration = '0.06s';
+        elDayPart.style.transitionDuration = '0.06s';
+        prevDisplay = '';
+        startTicker();
+    }
+
+    function stopDemo() {
+        demoMode = false;
+        demoDate = null;
+        elModifier.style.transitionDuration = '';
+        elHebrew.style.transitionDuration = '';
+        elDayPart.style.transitionDuration = '';
+        prevDisplay = '';
+        startTicker();
+    }
+
+    startTicker();
+
+    const FONT_STEP = 0.5;
+    const FONT_MIN  = 1.5;
+    const FONT_MAX  = 10;
+    let fontVW = parseFloat(localStorage.getItem('hc_fontVW') || '6.5');
+    let digitalVisible = localStorage.getItem('hc_digital') !== 'hidden';
+
+    function applyFont() {
+        elHebrew.style.fontSize = fontVW + 'vw';
+        elModifier.style.fontSize = fontVW + 'vw';
+        localStorage.setItem('hc_fontVW', fontVW);
+    }
+
+    function applyDigital() {
+        elDigital.classList.toggle('hidden', !digitalVisible);
+        document.getElementById('toggleDigital').textContent =
+            digitalVisible ? 'הסתר שעון' : 'הצג שעון';
+        localStorage.setItem('hc_digital', digitalVisible ? 'visible' : 'hidden');
+    }
+
+    applyFont();
+    applyDigital();
+
+    document.getElementById('fontInc').addEventListener('click', () => {
+        fontVW = Math.min(FONT_MAX, fontVW + FONT_STEP);
+        applyFont();
+    });
+
+    document.getElementById('fontDec').addEventListener('click', () => {
+        fontVW = Math.max(FONT_MIN, fontVW - FONT_STEP);
+        applyFont();
+    });
+
+    document.getElementById('toggleDigital').addEventListener('click', () => {
+        digitalVisible = !digitalVisible;
+        applyDigital();
+    });
+
+    function applySplit() {
+        document.getElementById('toggleSplit').textContent =
+            splitModifier ? 'קצת — שורה אחת' : 'קצת — שורה נפרדת';
+        localStorage.setItem('hc_split', splitModifier);
+        prevDisplay = '';
+        if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix);
+    }
+
+    applySplit();
+
+    document.getElementById('toggleSplit').addEventListener('click', () => {
+        splitModifier = !splitModifier;
+        applySplit();
+    });
+
+    function applyNiqqud() {
+        txt = useNiqqud ? NIQQUD : PLAIN;
+        document.getElementById('toggleNiqqud').textContent =
+            useNiqqud ? 'ללא ניקוד' : 'ניקוד';
+        localStorage.setItem('hc_niqqud', useNiqqud);
+        prevDisplay = '';
+        tick();
+    }
+
+    applyNiqqud();
+
+    document.getElementById('toggleNiqqud').addEventListener('click', () => {
+        useNiqqud = !useNiqqud;
+        applyNiqqud();
+    });
+
+    const elDemoBtn = document.getElementById('toggleDemo');
+
+    function applyDemo() {
+        elDemoBtn.textContent = demoMode ? 'עצור דמו' : 'דמו';
+        elDemoBtn.style.background = demoMode ? '#fde8e8' : '';
+        elDemoBtn.style.color = demoMode ? '#c0392b' : '';
+    }
+
+    applyDemo();
+
+    elDemoBtn.addEventListener('click', () => {
+        if (demoMode) {
+            stopDemo();
+        } else {
+            startDemo();
+        }
+        applyDemo();
+    });
+    </script>
+</body>
+</html>
