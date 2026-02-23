@@ -79,10 +79,10 @@
 
         .day-part {
             display: block;
-            font-size: max(1.3rem, 3vw);
+            font-size: max(2.5rem, 6.5vw);
             font-weight: 300;
             color: #1a1a1a;
-            margin-top: 0.6rem;
+            margin-top: 0.3rem;
             transition: opacity 0.35s ease;
         }
 
@@ -361,6 +361,10 @@
             </div>
             <div class="sep"></div>
             <div class="group">
+                <button class="toggle-btn" id="toggleSuffix">הסתר בערב</button>
+            </div>
+            <div class="sep"></div>
+            <div class="group">
                 <button class="toggle-btn" id="toggleNiqqud">ניקוד</button>
             </div>
             <div class="sep"></div>
@@ -371,7 +375,7 @@
             <div class="group">
                 <button class="toggle-btn" id="toggleDemo">דמו</button>
             </div>
-            <span class="version">v1.5</span>
+            <span class="version">v1.7</span>
         </div>
     </div>
 
@@ -492,6 +496,8 @@
 
     let prevDisplay = '';
     let splitModifier = localStorage.getItem('hc_split') !== 'false';
+    const suffixStored = localStorage.getItem('hc_suffix');
+    let suffixVisible = suffixStored === null ? true : suffixStored !== 'false';
 
     let fadeTimeout = null;
 
@@ -507,7 +513,8 @@
             }
         }
 
-        const display = modLine + '|' + mainLine + '|' + suffix;
+        const shownSuffix = suffixVisible ? suffix : '';
+        const display = modLine + '|' + mainLine + '|' + shownSuffix;
         if (display === prevDisplay) return;
 
         if (fadeTimeout) { clearTimeout(fadeTimeout); fadeTimeout = null; }
@@ -521,7 +528,7 @@
         fadeTimeout = setTimeout(() => {
             elModifier.textContent = modLine;
             elHebrew.textContent = mainLine;
-            elDayPart.textContent = suffix;
+            elDayPart.textContent = shownSuffix;
             elModifier.classList.remove('fade');
             elHebrew.classList.remove('fade');
             elDayPart.classList.remove('fade');
@@ -632,6 +639,7 @@
         const size = 'max(2.5rem, ' + fontVW + 'vw)';
         elHebrew.style.fontSize = size;
         elModifier.style.fontSize = size;
+        elDayPart.style.fontSize = size;
         localStorage.setItem('hc_fontVW', fontVW);
     }
 
@@ -674,6 +682,21 @@
     document.getElementById('toggleSplit').addEventListener('click', () => {
         splitModifier = !splitModifier;
         applySplit();
+    });
+
+    function applySuffix() {
+        document.getElementById('toggleSuffix').textContent =
+            suffixVisible ? 'הסתר בערב' : 'הצג בערב';
+        localStorage.setItem('hc_suffix', suffixVisible);
+        prevDisplay = '';
+        if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix);
+    }
+
+    applySuffix();
+
+    document.getElementById('toggleSuffix').addEventListener('click', () => {
+        suffixVisible = !suffixVisible;
+        applySuffix();
     });
 
     function applyNiqqud() {
