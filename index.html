@@ -178,6 +178,12 @@
             background: #ccc;
         }
 
+        .version {
+            font-size: 0.65rem;
+            color: #bbb;
+            letter-spacing: 0.05em;
+        }
+
         .toggle-btn {
             width: auto !important;
             padding: 0 12px !important;
@@ -242,6 +248,7 @@
             <div class="group">
                 <button class="toggle-btn" id="toggleDemo">דמו</button>
             </div>
+            <span class="version">v1.0</span>
         </div>
     </div>
 
@@ -455,7 +462,8 @@
     const FONT_MIN  = 1.5;
     const FONT_MAX  = 10;
     let fontVW = parseFloat(localStorage.getItem('hc_fontVW') || '6.5');
-    let digitalVisible = localStorage.getItem('hc_digital') !== 'hidden';
+    const digitalStored = localStorage.getItem('hc_digital');
+    let digitalVisible = digitalStored === null ? false : digitalStored === 'visible';
 
     function applyFont() {
         const size = 'max(2.5rem, ' + fontVW + 'vw)';
