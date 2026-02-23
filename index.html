@@ -224,6 +224,65 @@
             background-color: #ddd;
         }
 
+        body.dark {
+            background: #121212;
+            color: #e8e8e8;
+        }
+
+        body.dark .modifier {
+            color: #e8e8e8;
+        }
+
+        body.dark .day-part {
+            color: #e8e8e8;
+        }
+
+        body.dark .digital-time {
+            color: #555;
+        }
+
+        body.dark .settings-panel {
+            background: #252525;
+            color: #999;
+        }
+
+        body.dark .settings-panel .sep {
+            background: #444;
+        }
+
+        body.dark .settings-panel button {
+            background: #3a3a3a;
+            color: #ccc;
+        }
+
+        body.dark .settings-panel button:hover {
+            background: #484848;
+        }
+
+        body.dark .settings-panel button:active {
+            background: #555;
+        }
+
+        body.dark .font-select {
+            background: #3a3a3a;
+            color: #ccc;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 8px center;
+        }
+
+        body.dark .settings-handle span {
+            background: #555;
+        }
+
+        body.dark .version {
+            color: #444;
+        }
+
+        body.dark .toggle-btn:disabled {
+            opacity: 0.3;
+        }
+
         @media (max-width: 600px) {
             .settings-handle {
                 display: flex;
@@ -291,9 +350,13 @@
             </div>
             <div class="sep"></div>
             <div class="group">
+                <button class="toggle-btn" id="toggleTheme">תצוגה: אוטו</button>
+            </div>
+            <div class="sep"></div>
+            <div class="group">
                 <button class="toggle-btn" id="toggleDemo">דמו</button>
             </div>
-            <span class="version">v1.2</span>
+            <span class="version">v1.3</span>
         </div>
     </div>
 
@@ -617,9 +680,10 @@
     const elDemoBtn = document.getElementById('toggleDemo');
 
     function applyDemo() {
+        const dark = document.body.classList.contains('dark');
         elDemoBtn.textContent = demoMode ? 'עצור דמו' : 'דמו';
-        elDemoBtn.style.background = demoMode ? '#fde8e8' : '';
-        elDemoBtn.style.color = demoMode ? '#c0392b' : '';
+        elDemoBtn.style.background = demoMode ? (dark ? '#3a1a1a' : '#fde8e8') : '';
+        elDemoBtn.style.color = demoMode ? (dark ? '#e74c3c' : '#c0392b') : '';
     }
 
     applyDemo();
@@ -631,6 +695,74 @@
             startDemo();
         }
         applyDemo();
+    });
+
+    // --- Theme / Night mode ---
+
+    function getSunTimes(date, lat, lng) {
+        const rad = Math.PI / 180;
+        const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
+        const dec = -23.45 * Math.cos(rad * 360 / 365 * (dayOfYear + 10));
+        const decRad = dec * rad;
+        const latRad = lat * rad;
+        const cosH = (Math.sin(-0.833 * rad) - Math.sin(latRad) * Math.sin(decRad)) /
+                     (Math.cos(latRad) * Math.cos(decRad));
+        if (Math.abs(cosH) > 1) return null;
+        const hourAngle = Math.acos(cosH) / rad / 15;
+        const tzOffset = -date.getTimezoneOffset() / 60;
+        const solarNoon = 12 + (tzOffset * 15 - lng) / 15;
+        return { sunrise: solarNoon - hourAngle, sunset: solarNoon + hourAngle };
+    }
+
+    const THEME_MODES = ['auto', 'day', 'night'];
+    const THEME_LABELS = { auto: 'תצוגה: אוטו', day: 'תצוגה: יום', night: 'תצוגה: לילה' };
+    let themeMode = localStorage.getItem('hc_theme') || 'auto';
+    if (!THEME_MODES.includes(themeMode)) themeMode = 'auto';
+
+    let geoLat = parseFloat(localStorage.getItem('hc_lat')) || null;
+    let geoLng = parseFloat(localStorage.getItem('hc_lng')) || null;
+
+    function isDarkNow() {
+        if (themeMode === 'night') return true;
+        if (themeMode === 'day') return false;
+        const now = new Date();
+        const h = now.getHours() + now.getMinutes() / 60;
+        if (geoLat !== null && geoLng !== null) {
+            const sun = getSunTimes(now, geoLat, geoLng);
+            if (sun) return h < sun.sunrise || h >= sun.sunset;
+        }
+        return h < 6 || h >= 18;
+    }
+
+    function applyTheme() {
+        document.body.classList.toggle('dark', isDarkNow());
+        document.getElementById('toggleTheme').textContent = THEME_LABELS[themeMode];
+        localStorage.setItem('hc_theme', themeMode);
+    }
+
+    function requestGeo() {
+        if (!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                geoLat = pos.coords.latitude;
+                geoLng = pos.coords.longitude;
+                localStorage.setItem('hc_lat', geoLat);
+                localStorage.setItem('hc_lng', geoLng);
+                applyTheme();
+            },
+            () => {}
+        );
+    }
+
+    if (themeMode === 'auto' && geoLat === null) requestGeo();
+    applyTheme();
+    setInterval(applyTheme, 60000);
+
+    document.getElementById('toggleTheme').addEventListener('click', () => {
+        const i = THEME_MODES.indexOf(themeMode);
+        themeMode = THEME_MODES[(i + 1) % THEME_MODES.length];
+        if (themeMode === 'auto' && geoLat === null) requestGeo();
+        applyTheme();
     });
 
     const elPanel = document.getElementById('settingsPanel');
