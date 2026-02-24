@@ -214,6 +214,25 @@
             letter-spacing: 0.05em;
         }
 
+        .credit {
+            font-size: 0.65rem;
+            color: #bbb;
+        }
+
+        .credit a {
+            color: #aaa;
+            text-decoration: none;
+        }
+
+        .credit a:hover {
+            text-decoration: underline;
+        }
+
+        body.dark .credit,
+        body.dark .credit a {
+            color: #555;
+        }
+
         .toggle-btn {
             width: auto !important;
             padding: 0 12px !important;
@@ -375,7 +394,8 @@
             <div class="group">
                 <button class="toggle-btn" id="toggleDemo">דמו</button>
             </div>
-            <span class="version">v1.7</span>
+            <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
+            <span class="version">v1.8</span>
         </div>
     </div>
 
