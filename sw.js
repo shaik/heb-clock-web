@@ -1,4 +1,4 @@
-const CACHE = 'heb-clock-v1';
+const CACHE = 'heb-clock-v2';
 const ASSETS = [
   '/heb-clock-web/',
   '/heb-clock-web/index.html',
@@ -25,7 +25,24 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
-  );
+  const url = new URL(e.request.url);
+  const isHtml = url.pathname.endsWith('/') || url.pathname.endsWith('.html');
+
+  if (isHtml) {
+    // Network-first for HTML so updates are always picked up
+    e.respondWith(
+      fetch(e.request)
+        .then(res => {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+          return res;
+        })
+        .catch(() => caches.match(e.request))
+    );
+  } else {
+    // Cache-first for fonts and other static assets
+    e.respondWith(
+      caches.match(e.request).then(cached => cached || fetch(e.request))
+    );
+  }
 });
