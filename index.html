@@ -484,6 +484,11 @@
                     <button class="toggle-btn" id="toggleDemo">דמו</button>
                 </div>
 
+                <div class="settings-row" id="wakeLockRow" style="display:none">
+                    <span class="row-label">מסך דלוק</span>
+                    <button class="toggle-btn" id="toggleWakeLock">הפעל</button>
+                </div>
+
                 <div class="settings-row" id="fullscreenRow" style="display:none">
                     <span class="row-label">מסך מלא</span>
                     <button class="toggle-btn" id="toggleFullscreen">הפעל</button>
@@ -496,7 +501,7 @@
 
                 <div class="panel-footer">
                     <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
-                    <span class="version">v1.98</span>
+                    <span class="version">v1.99</span>
                 </div>
             </div>
         </div>
@@ -1008,6 +1013,46 @@
         elInstallGroup.style.display = 'none';
         elInstallBtn.style.display = 'none';
         installPrompt = null;
+    });
+
+    // Wake Lock
+    const elWakeLockRow = document.getElementById('wakeLockRow');
+    const elWakeLockBtn = document.getElementById('toggleWakeLock');
+    let wakeLock = null;
+    let wakeLockEnabled = false;
+
+    if ('wakeLock' in navigator) {
+        elWakeLockRow.style.display = '';
+    }
+
+    async function requestWakeLock() {
+        try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            wakeLock.addEventListener('release', () => {
+                // Re-acquire if still enabled and page is visible
+                if (wakeLockEnabled && document.visibilityState === 'visible') requestWakeLock();
+            });
+        } catch {}
+    }
+
+    function applyWakeLock() {
+        elWakeLockBtn.textContent = wakeLockEnabled ? 'כבה' : 'הפעל';
+    }
+
+    elWakeLockBtn.addEventListener('click', async () => {
+        wakeLockEnabled = !wakeLockEnabled;
+        if (wakeLockEnabled) {
+            await requestWakeLock();
+        } else {
+            wakeLock && wakeLock.release();
+            wakeLock = null;
+        }
+        applyWakeLock();
+    });
+
+    // Re-acquire wake lock when tab becomes visible again
+    document.addEventListener('visibilitychange', () => {
+        if (wakeLockEnabled && document.visibilityState === 'visible') requestWakeLock();
     });
 
     // Fullscreen
