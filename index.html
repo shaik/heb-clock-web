@@ -243,6 +243,23 @@
 
         .font-select:hover { background-color: #dadada; }
 
+        .font-size-select {
+            height: 38px;
+            width: 72px;
+            border: none;
+            border-radius: 10px;
+            background: #e6e6e6;
+            color: #333;
+            font-size: 0.92rem;
+            font-family: 'Heebo', sans-serif;
+            text-align: center;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .font-size-select:hover { background-color: #dadada; }
+
         .panel-footer {
             display: flex;
             justify-content: space-between;
@@ -361,6 +378,13 @@
 
         body.dark .font-select:hover { background-color: #444; }
 
+        body.dark .font-size-select {
+            background: #383838;
+            color: #ddd;
+        }
+
+        body.dark .font-size-select:hover { background-color: #444; }
+
         body.dark .version,
         body.dark .credit,
         body.dark .credit a { color: #505050; }
@@ -415,6 +439,7 @@
                     <span class="row-label">גודל</span>
                     <div class="row-controls">
                         <button class="size-btn" id="fontDec">&minus;</button>
+                        <select class="font-size-select" id="fontSizeSelect"></select>
                         <button class="size-btn" id="fontInc">+</button>
                     </div>
                 </div>
@@ -456,7 +481,7 @@
 
                 <div class="panel-footer">
                     <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
-                    <span class="version">v1.95</span>
+                    <span class="version">v1.96</span>
                 </div>
             </div>
         </div>
@@ -723,13 +748,27 @@
     const digitalStored = localStorage.getItem('hc_digital');
     let digitalVisible = digitalStored === null ? false : digitalStored === 'visible';
 
+    const elFontSizeSelect = document.getElementById('fontSizeSelect');
+    for (let v = FONT_MIN; v <= FONT_MAX; v = Math.round((v + FONT_STEP) * 10) / 10) {
+        const opt = document.createElement('option');
+        opt.value = v;
+        opt.textContent = v;
+        elFontSizeSelect.appendChild(opt);
+    }
+
     function applyFont() {
         const size = 'max(2.5rem, ' + fontVW + 'vw)';
         elHebrew.style.fontSize = size;
         elModifier.style.fontSize = size;
         elDayPart.style.fontSize = size;
+        elFontSizeSelect.value = fontVW;
         localStorage.setItem('hc_fontVW', fontVW);
     }
+
+    elFontSizeSelect.addEventListener('change', () => {
+        fontVW = parseFloat(elFontSizeSelect.value);
+        applyFont();
+    });
 
     function applyDigital() {
         elDigital.classList.toggle('hidden', !digitalVisible);
