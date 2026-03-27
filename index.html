@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
     <title>שעון עברי</title>
+    <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@200;300;400&family=Rubik:wght@300;400&family=Frank+Ruhl+Libre:wght@300;400&family=Secular+One&family=Suez+One&family=Bellefair&display=swap" rel="stylesheet">
@@ -321,6 +323,10 @@
             opacity: 0.3;
         }
 
+        #installBtn {
+            display: none;
+        }
+
         @media (max-width: 600px) {
             .settings-panel {
                 flex-wrap: wrap;
@@ -394,8 +400,12 @@
             <div class="group">
                 <button class="toggle-btn" id="toggleDemo">דמו</button>
             </div>
+            <div class="group" id="installGroup" style="display:none">
+                <div class="sep"></div>
+                <button class="toggle-btn" id="installBtn">התקן</button>
+            </div>
             <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
-            <span class="version">v1.8</span>
+            <span class="version">v1.9</span>
         </div>
     </div>
 
@@ -849,6 +859,52 @@
             elHandle.style.display = '';
         }
     });
+
+    // Double-click anywhere on the time display opens settings
+    function openSettings() {
+        elHandle.classList.remove('hint');
+        localStorage.setItem('hc_seen', '1');
+        elPanel.classList.add('open');
+        elHandle.style.display = 'none';
+    }
+
+    [elModifier, elHebrew, elDayPart].forEach(el => {
+        el.addEventListener('dblclick', openSettings);
+    });
+
+    // PWA install button
+    let installPrompt = null;
+    const elInstallGroup = document.getElementById('installGroup');
+    const elInstallBtn = document.getElementById('installBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        installPrompt = e;
+        elInstallGroup.style.display = '';
+        elInstallBtn.style.display = '';
+    });
+
+    elInstallBtn.addEventListener('click', async () => {
+        if (!installPrompt) return;
+        installPrompt.prompt();
+        const { outcome } = await installPrompt.userChoice;
+        if (outcome === 'accepted') {
+            elInstallGroup.style.display = 'none';
+            elInstallBtn.style.display = 'none';
+            installPrompt = null;
+        }
+    });
+
+    window.addEventListener('appinstalled', () => {
+        elInstallGroup.style.display = 'none';
+        elInstallBtn.style.display = 'none';
+        installPrompt = null;
+    });
+
+    // Service worker registration
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/heb-clock-web/sw.js');
+    }
     </script>
 </body>
 </html>

@@ -1,0 +1,32 @@
+{
+  "name": "שעון עברי",
+  "short_name": "שעון",
+  "description": "שעון המציג את השעה כמשפט עברי טבעי",
+  "start_url": "/heb-clock-web/",
+  "scope": "/heb-clock-web/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "lang": "he",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "icons/icon-196.png",
+      "sizes": "196x196",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-2048.png",
+      "sizes": "2048x2048",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
