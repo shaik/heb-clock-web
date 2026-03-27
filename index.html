@@ -279,14 +279,14 @@
         }
 
         .version {
-            font-size: 0.82rem;
-            color: #999;
+            font-size: 0.88rem;
+            color: #777;
             letter-spacing: 0.04em;
         }
 
         .credit {
-            font-size: 0.7rem;
-            color: #c0c0c0;
+            font-size: 0.85rem;
+            color: #888;
         }
 
         .credit a {
@@ -394,9 +394,9 @@
 
         body.dark .font-size-select:hover { background-color: #444; }
 
-        body.dark .version { color: #666; }
+        body.dark .version { color: #888; }
         body.dark .credit,
-        body.dark .credit a { color: #505050; }
+        body.dark .credit a { color: #777; }
 
         body.dark .settings-handle span { background: #555; }
         body.dark .settings-handle:hover span { background: #777; }
@@ -480,12 +480,12 @@
                 </div>
 
                 <div class="settings-row">
-                    <span class="row-label">דמו</span>
-                    <button class="toggle-btn" id="toggleDemo">דמו</button>
+                    <span class="row-label">הדגמה</span>
+                    <button class="toggle-btn" id="toggleDemo">הדגמה</button>
                 </div>
 
                 <div class="settings-row" id="wakeLockRow" style="display:none">
-                    <span class="row-label">מסך דלוק</span>
+                    <span class="row-label">מסך דלוק (always on)</span>
                     <button class="toggle-btn" id="toggleWakeLock">הפעל</button>
                 </div>
 
@@ -501,7 +501,7 @@
 
                 <div class="panel-footer">
                     <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
-                    <span class="version">v2.0</span>
+                    <span class="version">v2.01</span>
                 </div>
             </div>
         </div>
@@ -866,7 +866,7 @@
 
     function applyDemo() {
         const dark = document.body.classList.contains('dark');
-        elDemoBtn.textContent = demoMode ? 'עצור דמו' : 'דמו';
+        elDemoBtn.textContent = demoMode ? 'עצור' : 'הדגמה';
         elDemoBtn.style.background = demoMode ? (dark ? '#3a1a1a' : '#fde8e8') : '';
         elDemoBtn.style.color = demoMode ? (dark ? '#e74c3c' : '#c0392b') : '';
     }
