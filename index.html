@@ -125,13 +125,22 @@
             box-shadow: 0 -2px 40px rgba(0, 0, 0, 0.10);
             transform: translateY(100%);
             transition: transform 0.38s cubic-bezier(0.32, 0.72, 0, 1);
-            padding: 0 1.5rem calc(1.8rem + env(safe-area-inset-bottom));
             direction: rtl;
             user-select: none;
+            display: flex;
+            flex-direction: column;
+            max-height: 85dvh;
+            overflow: hidden;
         }
 
         .settings-panel.open {
             transform: translateY(0);
+        }
+
+        .panel-header {
+            flex-shrink: 0;
+            padding: 0 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.07);
         }
 
         .panel-drag {
@@ -139,7 +148,25 @@
             height: 4px;
             background: #d0d0d0;
             border-radius: 2px;
-            margin: 14px auto 6px;
+            margin: 14px auto 10px;
+        }
+
+        .panel-preview {
+            text-align: center;
+            direction: rtl;
+            font-size: clamp(1.2rem, 5vw, 1.9rem);
+            font-weight: 300;
+            line-height: 1.4;
+            padding: 0 0 1rem;
+            color: #1a1a1a;
+            min-height: 2rem;
+        }
+
+        .panel-body {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            padding: 0 1.5rem calc(1.8rem + env(safe-area-inset-bottom));
         }
 
         .settings-row {
@@ -296,6 +323,14 @@
             background: rgba(28, 28, 28, 0.97);
         }
 
+        body.dark .panel-header {
+            border-bottom-color: rgba(255, 255, 255, 0.07);
+        }
+
+        body.dark .panel-preview {
+            color: #e8e8e8;
+        }
+
         body.dark .settings-row {
             border-bottom-color: rgba(255, 255, 255, 0.07);
         }
@@ -336,12 +371,15 @@
         body.dark .toggle-btn:disabled { opacity: 0.3; }
 
         @media (max-width: 600px) {
-            .settings-panel {
-                max-width: 100%;
-                padding: 0 1.2rem calc(1.4rem + env(safe-area-inset-bottom));
-            }
-
+            .settings-panel { max-width: 100%; max-height: 80dvh; }
+            .panel-header { padding: 0 1.2rem; }
+            .panel-body { padding: 0 1.2rem calc(1.4rem + env(safe-area-inset-bottom)); }
             .settings-row { min-height: 58px; }
+        }
+
+        @media (max-height: 500px) {
+            .settings-panel { max-height: 90dvh; }
+            .panel-preview { font-size: 1.1rem; padding-bottom: 0.6rem; }
         }
     </style>
 </head>
@@ -354,67 +392,72 @@
     <div class="settings-handle" id="settingsHandle"><span></span></div>
     <div class="settings-zone">
         <div class="settings-panel" id="settingsPanel">
-            <div class="panel-drag"></div>
-
-            <div class="settings-row">
-                <span class="row-label">גופן</span>
-                <select class="font-select" id="fontFamily">
-                    <option value="heebo">Heebo</option>
-                    <option value="rubik">Rubik</option>
-                    <option value="frank">Frank Ruhl Libre</option>
-                    <option value="secular">Secular One</option>
-                    <option value="suez">Suez One</option>
-                    <option value="bellefair">Bellefair</option>
-                    <option value="fridge">Fridge</option>
-                </select>
+            <div class="panel-header">
+                <div class="panel-drag"></div>
+                <div class="panel-preview" id="panelPreview"></div>
             </div>
 
-            <div class="settings-row">
-                <span class="row-label">גודל</span>
-                <div class="row-controls">
-                    <button class="size-btn" id="fontDec">&minus;</button>
-                    <button class="size-btn" id="fontInc">+</button>
+            <div class="panel-body">
+                <div class="settings-row">
+                    <span class="row-label">גופן</span>
+                    <select class="font-select" id="fontFamily">
+                        <option value="heebo">Heebo</option>
+                        <option value="rubik">Rubik</option>
+                        <option value="frank">Frank Ruhl Libre</option>
+                        <option value="secular">Secular One</option>
+                        <option value="suez">Suez One</option>
+                        <option value="bellefair">Bellefair</option>
+                        <option value="fridge">Fridge</option>
+                    </select>
                 </div>
-            </div>
 
-            <div class="settings-row">
-                <span class="row-label">שעון דיגיטלי</span>
-                <button class="toggle-btn" id="toggleDigital">הצג</button>
-            </div>
+                <div class="settings-row">
+                    <span class="row-label">גודל</span>
+                    <div class="row-controls">
+                        <button class="size-btn" id="fontDec">&minus;</button>
+                        <button class="size-btn" id="fontInc">+</button>
+                    </div>
+                </div>
 
-            <div class="settings-row">
-                <span class="row-label">קצת</span>
-                <button class="toggle-btn" id="toggleSplit">שורה נפרדת</button>
-            </div>
+                <div class="settings-row">
+                    <span class="row-label">שעון דיגיטלי</span>
+                    <button class="toggle-btn" id="toggleDigital">הצג</button>
+                </div>
 
-            <div class="settings-row">
-                <span class="row-label">בוקר / ערב</span>
-                <button class="toggle-btn" id="toggleSuffix">הסתר</button>
-            </div>
+                <div class="settings-row">
+                    <span class="row-label">קצת</span>
+                    <button class="toggle-btn" id="toggleSplit">שורה נפרדת</button>
+                </div>
 
-            <div class="settings-row">
-                <span class="row-label">ניקוד</span>
-                <button class="toggle-btn" id="toggleNiqqud">ניקוד</button>
-            </div>
+                <div class="settings-row">
+                    <span class="row-label">בוקר / ערב</span>
+                    <button class="toggle-btn" id="toggleSuffix">הסתר</button>
+                </div>
 
-            <div class="settings-row">
-                <span class="row-label">תצוגה</span>
-                <button class="toggle-btn" id="toggleTheme">אוטו</button>
-            </div>
+                <div class="settings-row">
+                    <span class="row-label">ניקוד</span>
+                    <button class="toggle-btn" id="toggleNiqqud">ניקוד</button>
+                </div>
 
-            <div class="settings-row">
-                <span class="row-label">דמו</span>
-                <button class="toggle-btn" id="toggleDemo">דמו</button>
-            </div>
+                <div class="settings-row">
+                    <span class="row-label">תצוגה</span>
+                    <button class="toggle-btn" id="toggleTheme">אוטו</button>
+                </div>
 
-            <div class="settings-row" id="installGroup" style="display:none">
-                <span class="row-label">התקנה</span>
-                <button class="toggle-btn" id="installBtn">Install</button>
-            </div>
+                <div class="settings-row">
+                    <span class="row-label">דמו</span>
+                    <button class="toggle-btn" id="toggleDemo">דמו</button>
+                </div>
 
-            <div class="panel-footer">
-                <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
-                <span class="version">v1.94</span>
+                <div class="settings-row" id="installGroup" style="display:none">
+                    <span class="row-label">התקנה</span>
+                    <button class="toggle-btn" id="installBtn">Install</button>
+                </div>
+
+                <div class="panel-footer">
+                    <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
+                    <span class="version">v1.95</span>
+                </div>
             </div>
         </div>
     </div>
@@ -533,6 +576,7 @@
     const elModifier = document.getElementById('modifier');
     const elHebrew   = document.getElementById('hebrewTime');
     const elDayPart  = document.getElementById('dayPart');
+    const elPreview  = document.getElementById('panelPreview');
 
     let prevDisplay = '';
     let splitModifier = localStorage.getItem('hc_split') !== 'false';
@@ -554,6 +598,10 @@
         }
 
         const shownSuffix = suffixVisible ? suffix : '';
+
+        // Always keep preview in sync with current text and settings
+        elPreview.textContent = [modLine, mainLine, shownSuffix].filter(Boolean).join(' ');
+
         const display = modLine + '|' + mainLine + '|' + shownSuffix;
         if (display === prevDisplay) return;
 
@@ -646,7 +694,7 @@
 
     function applyFontFamily() {
         const f = FONTS[currentFontId];
-        const targets = [elHebrew, elModifier, elDayPart];
+        const targets = [elHebrew, elModifier, elDayPart, elPreview];
         targets.forEach(el => {
             el.style.fontFamily = f.family;
             el.style.fontWeight = f.weight;
