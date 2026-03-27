@@ -12,6 +12,10 @@ A single-file web application that displays the current time as a natural Hebrew
 
 Open `index.html` directly in a browser. There is no build step, no server required, and no npm/node dependencies.
 
+## Versioning
+
+Bump the version in `index.html` (the `<span class="version">` element) with **every change**, using a minor decimal scheme: `v1.9` → `v1.91` → `v1.92` → ... → `v1.99` → `v2.0`. Always include the version bump in the same commit as the change.
+
 ## Architecture
 
 Everything is in `index.html`:
