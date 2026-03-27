@@ -103,6 +103,15 @@
         }
 
         /* ── Settings panel ── */
+        .panel-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9;
+        }
+
+        .panel-backdrop.active { display: block; }
+
         .settings-zone {
             position: fixed;
             bottom: 0;
@@ -413,6 +422,7 @@
     <div class="hebrew-time" id="hebrewTime"></div>
     <div class="day-part" id="dayPart"></div>
 
+    <div class="panel-backdrop" id="panelBackdrop"></div>
     <div class="settings-handle" id="settingsHandle"><span></span></div>
     <div class="settings-zone">
         <div class="settings-panel" id="settingsPanel">
@@ -481,7 +491,7 @@
 
                 <div class="panel-footer">
                     <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
-                    <span class="version">v1.96</span>
+                    <span class="version">v1.97</span>
                 </div>
             </div>
         </div>
@@ -743,7 +753,7 @@
 
     const FONT_STEP = 0.5;
     const FONT_MIN  = 1.5;
-    const FONT_MAX  = 10;
+    const FONT_MAX  = 20;
     let fontVW = parseFloat(localStorage.getItem('hc_fontVW') || '6.5');
     const digitalStored = localStorage.getItem('hc_digital');
     let digitalVisible = digitalStored === null ? false : digitalStored === 'visible';
@@ -930,8 +940,23 @@
         applyTheme();
     });
 
-    const elPanel = document.getElementById('settingsPanel');
-    const elHandle = document.getElementById('settingsHandle');
+    const elPanel    = document.getElementById('settingsPanel');
+    const elHandle   = document.getElementById('settingsHandle');
+    const elBackdrop = document.getElementById('panelBackdrop');
+
+    function openSettings() {
+        elHandle.classList.remove('hint');
+        localStorage.setItem('hc_seen', '1');
+        elPanel.classList.add('open');
+        elBackdrop.classList.add('active');
+        elHandle.style.display = 'none';
+    }
+
+    function closeSettings() {
+        elPanel.classList.remove('open');
+        elBackdrop.classList.remove('active');
+        elHandle.style.display = '';
+    }
 
     if (!localStorage.getItem('hc_seen')) {
         elHandle.classList.add('hint');
@@ -942,31 +967,13 @@
     }
 
     elHandle.addEventListener('click', () => {
-        elHandle.classList.remove('hint');
-        localStorage.setItem('hc_seen', '1');
-        elPanel.classList.toggle('open');
-        elHandle.style.display = elPanel.classList.contains('open') ? 'none' : '';
+        elPanel.classList.contains('open') ? closeSettings() : openSettings();
     });
 
-    document.addEventListener('click', (e) => {
-        if (elPanel.classList.contains('open') &&
-            !elPanel.contains(e.target) &&
-            e.target !== elHandle && !elHandle.contains(e.target)) {
-            elPanel.classList.remove('open');
-            elHandle.style.display = '';
-        }
-    });
-
-    // Double-click anywhere on the time display opens settings
-    function openSettings() {
-        elHandle.classList.remove('hint');
-        localStorage.setItem('hc_seen', '1');
-        elPanel.classList.add('open');
-        elHandle.style.display = 'none';
-    }
+    elBackdrop.addEventListener('click', closeSettings);
 
     [elModifier, elHebrew, elDayPart].forEach(el => {
-        el.addEventListener('click', (e) => { e.stopPropagation(); openSettings(); });
+        el.addEventListener('click', openSettings);
     });
 
     // PWA install button
