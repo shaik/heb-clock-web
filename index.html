@@ -279,9 +279,9 @@
         }
 
         .version {
-            font-size: 0.7rem;
-            color: #c0c0c0;
-            letter-spacing: 0.05em;
+            font-size: 0.82rem;
+            color: #999;
+            letter-spacing: 0.04em;
         }
 
         .credit {
@@ -394,7 +394,7 @@
 
         body.dark .font-size-select:hover { background-color: #444; }
 
-        body.dark .version,
+        body.dark .version { color: #666; }
         body.dark .credit,
         body.dark .credit a { color: #505050; }
 
@@ -484,6 +484,11 @@
                     <button class="toggle-btn" id="toggleDemo">דמו</button>
                 </div>
 
+                <div class="settings-row" id="fullscreenRow" style="display:none">
+                    <span class="row-label">מסך מלא</span>
+                    <button class="toggle-btn" id="toggleFullscreen">הפעל</button>
+                </div>
+
                 <div class="settings-row" id="installGroup" style="display:none">
                     <span class="row-label">התקנה</span>
                     <button class="toggle-btn" id="installBtn">Install</button>
@@ -491,7 +496,7 @@
 
                 <div class="panel-footer">
                     <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
-                    <span class="version">v1.97</span>
+                    <span class="version">v1.98</span>
                 </div>
             </div>
         </div>
@@ -1004,6 +1009,31 @@
         elInstallBtn.style.display = 'none';
         installPrompt = null;
     });
+
+    // Fullscreen
+    const elFullscreenRow = document.getElementById('fullscreenRow');
+    const elFullscreenBtn = document.getElementById('toggleFullscreen');
+
+    if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
+        elFullscreenRow.style.display = '';
+    }
+
+    function applyFullscreen() {
+        const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+        elFullscreenBtn.textContent = isFs ? 'צא' : 'הפעל';
+    }
+
+    elFullscreenBtn.addEventListener('click', () => {
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+            (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        } else {
+            const el = document.documentElement;
+            (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+        }
+    });
+
+    document.addEventListener('fullscreenchange', applyFullscreen);
+    document.addEventListener('webkitfullscreenchange', applyFullscreen);
 
     // Service worker registration
     if ('serviceWorker' in navigator) {
