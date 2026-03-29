@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+
+# Android build outputs
+android/.gradle/
+android/local.properties
+android/build/
+android/app/build/
+android/**/*.iml
+android/.idea/caches/
+android/.idea/libraries/
+android/.idea/modules.xml
+android/.idea/workspace.xml
+android/.idea/navEditor.xml
+android/.idea/assetWizardSettings.xml
+android/captures/
+android/.externalNativeBuild/
+android/.cxx/
+*.apk
+*.aab
+*.keystore

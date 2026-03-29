@@ -4,6 +4,8 @@
 
 A client-side web application (`index.html`) that displays the current time as a natural Hebrew spoken phrase. It updates every second, requires no server or build tools, and works offline once loaded. It is installable as a PWA on Android and desktop.
 
+A native Android home-screen widget companion is located in the `android/` directory and documented separately in `spec-android.md`.
+
 Example outputs:
 
 - `שלוש` (3:00)
