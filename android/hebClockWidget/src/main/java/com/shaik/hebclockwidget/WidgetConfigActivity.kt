@@ -8,6 +8,10 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.RadioGroup
 import android.widget.Switch
+import android.widget.TextView
+import androidx.glance.appwidget.updateAll
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 
 class WidgetConfigActivity : Activity() {
 
@@ -30,8 +34,13 @@ class WidgetConfigActivity : Activity() {
         val swSuffix   = findViewById<Switch>(R.id.sw_suffix)
         val swModifier = findViewById<Switch>(R.id.sw_modifier)
         val swNiqqud   = findViewById<Switch>(R.id.sw_niqqud)
+        val swCompact  = findViewById<Switch>(R.id.sw_compact)
         val rgFontSize = findViewById<RadioGroup>(R.id.rg_font_size)
         val btnSave    = findViewById<Button>(R.id.btn_save)
+        val tvVersion  = findViewById<TextView>(R.id.tv_version)
+
+        val version = packageManager.getPackageInfo(packageName, 0).versionName
+        tvVersion.text = "v$version"
 
         // Populate from current prefs
         rgTheme.check(
@@ -40,6 +49,7 @@ class WidgetConfigActivity : Activity() {
         swSuffix.isChecked   = WidgetPrefs.showSuffix(this)
         swModifier.isChecked = WidgetPrefs.showModifier(this)
         swNiqqud.isChecked   = WidgetPrefs.useNiqqud(this)
+        swCompact.isChecked  = WidgetPrefs.compactLabels(this)
         rgFontSize.check(
             when (WidgetPrefs.fontSize(this)) {
                 20   -> R.id.rb_small
@@ -57,6 +67,7 @@ class WidgetConfigActivity : Activity() {
             WidgetPrefs.setShowSuffix(this, swSuffix.isChecked)
             WidgetPrefs.setShowModifier(this, swModifier.isChecked)
             WidgetPrefs.setUseNiqqud(this, swNiqqud.isChecked)
+            WidgetPrefs.setCompactLabels(this, swCompact.isChecked)
             WidgetPrefs.setFontSize(
                 this,
                 when (rgFontSize.checkedRadioButtonId) {
@@ -66,24 +77,31 @@ class WidgetConfigActivity : Activity() {
                 }
             )
 
-            // Trigger widget refresh via broadcast — reliable, no coroutine timing issues
-            val manager = AppWidgetManager.getInstance(applicationContext)
-            val ids = manager.getAppWidgetIds(
-                ComponentName(applicationContext, HebClockWidgetReceiver::class.java)
-            )
-            if (ids.isNotEmpty()) {
-                sendBroadcast(Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE).apply {
-                    component = ComponentName(applicationContext, HebClockWidgetReceiver::class.java)
-                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-                })
-            }
-
             // Tell Android to place the widget (initial configure flow only)
             if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
                 setResult(RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId))
             }
 
-            finish()
+            // Fast in-process path: updateAll() suspends until Glance has pushed new
+            // RemoteViews to the launcher, so finish() only runs after the widget is
+            // already visually updated — the user sees the new state instantly.
+            MainScope().launch {
+                HebClockWidget().updateAll(applicationContext)
+                finish()
+            }
+
+            // Belt-and-suspenders: also send ACTION_APPWIDGET_UPDATE through the
+            // GlanceAppWidgetReceiver. This backup fires asynchronously and is harmless.
+            val manager = AppWidgetManager.getInstance(this)
+            val ids = manager.getAppWidgetIds(
+                ComponentName(this, HebClockWidgetReceiver::class.java)
+            )
+            sendBroadcast(
+                Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE).apply {
+                    component = ComponentName(this@WidgetConfigActivity, HebClockWidgetReceiver::class.java)
+                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+                }
+            )
         }
     }
 }

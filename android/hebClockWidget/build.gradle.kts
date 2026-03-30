@@ -11,14 +11,25 @@ android {
         applicationId = "com.shaik.hebclockwidget"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 5
+        versionName = "1.14"
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+        }
+        debug {
+            // No suffix — same applicationId as release so new installs replace old ones
+        }
+    }
+
+    applicationVariants.all {
+        val variant = this
+        variant.outputs.all {
+            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            output.outputFileName = "hebrewClockWidget.apk"
         }
     }
 

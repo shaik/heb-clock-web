@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "HebClockWidget"
-include(":app")
+include(":hebClockWidget")

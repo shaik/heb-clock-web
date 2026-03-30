@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>שעון עברי — Android Widget</title>
+    <meta name="description" content="A free Android home-screen widget that displays the current time as a natural Hebrew spoken phrase.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@200;300;400;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg:        #f7f7f5;
+            --surface:   #ffffff;
+            --border:    rgba(0, 0, 0, 0.08);
+            --text:      #1a1a1a;
+            --text-dim:  #666;
+            --text-faint:#aaa;
+            --accent:    #1a1a2e;
+            --btn-bg:    #1a1a2e;
+            --btn-text:  #ffffff;
+            --btn-hover: #2e2e4e;
+            --tag-bg:    rgba(26, 26, 46, 0.07);
+            --tag-text:  #1a1a2e;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg:        #111114;
+                --surface:   #1c1c20;
+                --border:    rgba(255, 255, 255, 0.07);
+                --text:      #e8e8e8;
+                --text-dim:  #888;
+                --text-faint:#555;
+                --accent:    #aaaacc;
+                --btn-bg:    #aaaacc;
+                --btn-text:  #111114;
+                --btn-hover: #c0c0e0;
+                --tag-bg:    rgba(170, 170, 204, 0.12);
+                --tag-text:  #aaaacc;
+            }
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Heebo', sans-serif;
+            font-weight: 300;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100dvh;
+        }
+
+        /* ── Layout ── */
+        .page {
+            max-width: 560px;
+            margin: 0 auto;
+            padding: 0 1.5rem 4rem;
+        }
+
+        /* ── Nav ── */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.4rem 0 0;
+        }
+
+        .nav-logo {
+            font-size: 1.05rem;
+            font-weight: 400;
+            color: var(--text-dim);
+            text-decoration: none;
+            direction: rtl;
+            transition: color 0.15s;
+        }
+        .nav-logo:hover { color: var(--text); }
+
+        .nav-link {
+            font-size: 0.88rem;
+            color: var(--text-faint);
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+        .nav-link:hover { color: var(--text-dim); }
+
+        /* ── Hero ── */
+        .hero {
+            padding: 3.5rem 0 2.8rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .hero-eyebrow {
+            font-size: 0.78rem;
+            font-weight: 400;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-faint);
+        }
+
+        .hero-title {
+            font-size: clamp(2.2rem, 8vw, 3rem);
+            font-weight: 200;
+            text-align: center;
+            direction: rtl;
+            line-height: 1.2;
+            color: var(--text);
+        }
+
+        .hero-sub {
+            font-size: 1.05rem;
+            font-weight: 300;
+            color: var(--text-dim);
+            text-align: center;
+            max-width: 360px;
+            line-height: 1.6;
+        }
+
+        /* ── Widget Mockup ── */
+        .mockup-wrap {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 2rem 0 2.5rem;
+        }
+
+        .phone-frame {
+            width: 220px;
+            background: #0a0a0f;
+            border-radius: 36px;
+            padding: 14px 10px;
+            box-shadow:
+                0 40px 80px rgba(0,0,0,0.35),
+                0 0 0 1px rgba(255,255,255,0.06) inset;
+            position: relative;
+        }
+
+        .phone-screen {
+            background: #18181f;
+            border-radius: 26px;
+            overflow: hidden;
+            padding: 16px 10px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Status bar dots */
+        .phone-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 6px;
+            margin-bottom: 4px;
+        }
+        .phone-status-time {
+            font-size: 0.6rem;
+            font-weight: 400;
+            color: #e8e8e8;
+            letter-spacing: 0.02em;
+        }
+        .phone-status-icons {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        .status-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #888;
+        }
+
+        /* The actual widget tile */
+        .widget-tile {
+            background: #1a1a2e;
+            border-radius: 20px;
+            padding: 18px 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            min-height: 108px;
+        }
+
+        .widget-modifier {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #ffffff;
+            direction: rtl;
+            text-align: center;
+        }
+
+        .widget-phrase {
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: #ffffff;
+            direction: rtl;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .widget-suffix {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #ffffff;
+            direction: rtl;
+            text-align: center;
+        }
+
+        /* Dummy home screen icons below */
+        .phone-icons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 6px 4px 0;
+        }
+        .phone-icon {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.06);
+        }
+
+        /* ── Download button ── */
+        .download-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem;
+            padding-bottom: 3rem;
+        }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: var(--btn-bg);
+            color: var(--btn-text);
+            text-decoration: none;
+            font-family: 'Heebo', sans-serif;
+            font-size: 1rem;
+            font-weight: 400;
+            padding: 0.85rem 2rem;
+            border-radius: 14px;
+            transition: background 0.18s ease, transform 0.12s ease;
+            letter-spacing: 0.01em;
+        }
+        .btn-download:hover {
+            background: var(--btn-hover);
+            transform: translateY(-1px);
+        }
+        .btn-download:active {
+            transform: translateY(0);
+        }
+
+        .btn-download svg {
+            flex-shrink: 0;
+        }
+
+        .dl-note {
+            font-size: 0.8rem;
+            color: var(--text-faint);
+        }
+
+        /* ── Features ── */
+        .section-title {
+            font-size: 0.72rem;
+            font-weight: 400;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-faint);
+            margin-bottom: 1rem;
+        }
+
+        .features {
+            padding-bottom: 3rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.9rem;
+            padding: 0.85rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
+            color: var(--text);
+            font-weight: 300;
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-icon {
+            font-size: 1.1rem;
+            line-height: 1.4;
+            flex-shrink: 0;
+        }
+
+        .feature-text strong {
+            font-weight: 400;
+            display: block;
+            margin-bottom: 0.15rem;
+        }
+
+        .feature-text span {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        /* ── Tags ── */
+        .tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            padding-bottom: 3rem;
+        }
+
+        .tag {
+            background: var(--tag-bg);
+            color: var(--tag-text);
+            font-size: 0.82rem;
+            font-weight: 400;
+            padding: 0.3rem 0.75rem;
+            border-radius: 20px;
+            direction: rtl;
+        }
+
+        /* ── Install steps ── */
+        .install {
+            padding-bottom: 3rem;
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .step {
+            display: flex;
+            gap: 1rem;
+            padding: 0.9rem 0;
+            border-bottom: 1px solid var(--border);
+            align-items: flex-start;
+        }
+
+        .step:last-child {
+            border-bottom: none;
+        }
+
+        .step-num {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--tag-bg);
+            color: var(--tag-text);
+            font-size: 0.78rem;
+            font-weight: 400;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 0.05rem;
+        }
+
+        .step-text {
+            font-size: 0.93rem;
+            font-weight: 300;
+            color: var(--text);
+            line-height: 1.55;
+        }
+
+        .step-text strong {
+            font-weight: 400;
+        }
+
+        /* ── Divider ── */
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 0 0 3rem;
+        }
+
+        /* ── Footer ── */
+        footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.82rem;
+            color: var(--text-faint);
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        footer a {
+            color: var(--text-faint);
+            text-decoration: none;
+        }
+        footer a:hover {
+            color: var(--text-dim);
+            text-decoration: underline;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 480px) {
+            .phone-frame { width: 190px; }
+            .widget-phrase { font-size: 1.25rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <nav>
+        <a class="nav-logo" href="https://shaik.github.io/heb-clock-web/">שעון עברי</a>
+        <a class="nav-link" href="https://shaik.github.io/heb-clock-web/">← Web App</a>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <span class="hero-eyebrow">Android Widget</span>
+        <h1 class="hero-title">שעון עברי</h1>
+        <p class="hero-sub">The current time, spoken naturally in Hebrew — always visible on your home screen.</p>
+    </section>
+
+    <!-- Widget Mockup -->
+    <div class="mockup-wrap">
+        <div class="phone-frame">
+            <div class="phone-screen">
+                <div class="phone-status">
+                    <span class="phone-status-time" id="mockupTime">9:41</span>
+                    <div class="phone-status-icons">
+                        <div class="status-dot"></div>
+                        <div class="status-dot"></div>
+                        <div class="status-dot"></div>
+                    </div>
+                </div>
+
+                <div class="widget-tile">
+                    <div class="widget-modifier" id="mockupModifier"></div>
+                    <div class="widget-phrase" id="mockupPhrase">שתיים וחצי</div>
+                    <div class="widget-suffix" id="mockupSuffix">בצהריים</div>
+                </div>
+
+                <div class="phone-icons">
+                    <div class="phone-icon"></div>
+                    <div class="phone-icon"></div>
+                    <div class="phone-icon"></div>
+                    <div class="phone-icon"></div>
+                    <div class="phone-icon"></div>
+                    <div class="phone-icon"></div>
+                    <div class="phone-icon"></div>
+                    <div class="phone-icon"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Download -->
+    <div class="download-wrap">
+        <a class="btn-download" href="https://github.com/shaik/heb-clock-web/releases/latest/download/hebrewClockWidget.apk" download>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download APK
+        </a>
+        <span class="dl-note">Free · Android 8.0+ · No account needed</span>
+    </div>
+
+    <!-- Features -->
+    <section class="features">
+        <p class="section-title">Features</p>
+        <ul class="feature-list">
+            <li>
+                <span class="feature-icon">🕐</span>
+                <div class="feature-text">
+                    <strong>Updates every minute</strong>
+                    <span>Precise alarm-driven updates, even when the screen wakes from sleep.</span>
+                </div>
+            </li>
+            <li>
+                <span class="feature-icon">🎨</span>
+                <div class="feature-text">
+                    <strong>Dark &amp; light themes</strong>
+                    <span>Choose the look that fits your home screen.</span>
+                </div>
+            </li>
+            <li>
+                <span class="feature-icon">🔠</span>
+                <div class="feature-text">
+                    <strong>Three font sizes</strong>
+                    <span>Small, medium, or large — with optional compact prefix and suffix.</span>
+                </div>
+            </li>
+            <li>
+                <span class="feature-icon">ּ◌</span>
+                <div class="feature-text">
+                    <strong>Niqqud (vowel marks)</strong>
+                    <span>Toggle vowel diacritics on or off.</span>
+                </div>
+            </li>
+            <li>
+                <span class="feature-icon">⚙️</span>
+                <div class="feature-text">
+                    <strong>Tap to configure</strong>
+                    <span>Tap the widget at any time to open the settings panel.</span>
+                </div>
+            </li>
+        </ul>
+    </section>
+
+    <!-- Phrase samples -->
+    <section style="padding-bottom: 3rem;">
+        <p class="section-title">Sample phrases</p>
+        <div class="tags">
+            <span class="tag">שלוש וחצי בלילה</span>
+            <span class="tag">קצת לפני תשע בבוקר</span>
+            <span class="tag">שתים עשרה</span>
+            <span class="tag">רבע לשש בערב</span>
+            <span class="tag">קצת אחרי אחת</span>
+            <span class="tag">עשרה לשתיים עשרה</span>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- Install instructions -->
+    <section class="install">
+        <p class="section-title">How to install</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <p class="step-text"><strong>Download the APK</strong> using the button above.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <p class="step-text">Open the downloaded file. If prompted, allow <strong>Install unknown apps</strong> for your browser — this is a one-time step.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <p class="step-text">Tap <strong>Install</strong>.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">4</div>
+                <p class="step-text">Long-press your home screen → <strong>Widgets</strong> → find <span dir="rtl">שעון עברי</span> → drag it onto your home screen.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <span>
+            <a href="https://shaik.github.io/heb-clock-web/">Web app</a>
+            &nbsp;·&nbsp;
+            <a href="https://github.com/shaik/heb-clock-web/releases">Releases</a>
+        </span>
+        <span dir="rtl">שעון עברי</span>
+    </footer>
+
+</div>
+
+<script>
+    // Live mockup — updates every second to show real Hebrew time
+    const HOURS = {
+        1:'אחת',2:'שתיים',3:'שלוש',4:'ארבע',5:'חמש',6:'שש',
+        7:'שבע',8:'שמונה',9:'תשע',10:'עשר',11:'אחת עשרה',12:'שתים עשרה'
+    };
+    const HOURS_L = {
+        1:'לאחת',2:'לשתיים',3:'לשלוש',4:'לארבע',5:'לחמש',6:'לשש',
+        7:'לשבע',8:'לשמונה',9:'לתשע',10:'לעשר',11:'לאחת עשרה',12:'לשתים עשרה'
+    };
+
+    function to12(h) { return ((h % 24 + 24) % 24 % 12) || 12; }
+
+    function buildPhrase(h24, m) {
+        const h = to12(h24);
+        const next = to12(h24 + 1);
+        switch (m) {
+            case  0: return HOURS[h];
+            case  5: return HOURS[h] + ' וחמישה';
+            case 10: return HOURS[h] + ' ועשרה';
+            case 15: return HOURS[h] + ' ורבע';
+            case 20: return HOURS[h] + ' ועשרים';
+            case 25: return HOURS[h] + ' עשרים וחמש';
+            case 30: return HOURS[h] + ' וחצי';
+            case 35: return HOURS[h] + ' שלושים וחמש';
+            case 40: return HOURS[h] + ' ארבעים';
+            case 45: return 'רבע ' + HOURS_L[next];
+            case 50: return 'עשרה ' + HOURS_L[next];
+            case 55: return 'חמישה ' + HOURS_L[next];
+            default: return HOURS[h];
+        }
+    }
+
+    function suffix(h24) {
+        const h = (h24 % 24 + 24) % 24;
+        if (h >= 5  && h <= 9)  return 'בבוקר';
+        if (h >= 10 && h <= 17) return '';
+        if (h >= 18 && h <= 21) return 'בערב';
+        return 'בלילה';
+    }
+
+    function tick() {
+        const now = new Date();
+        const h24 = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+        const t = 60 * m + s;
+        const anchorSec = Math.round(t / 300) * 300;
+        const delta = t - anchorSec;
+        let aH = h24, aM = anchorSec / 60;
+        if (aM >= 60) { aM = 0; aH = (aH + 1) % 24; }
+
+        document.getElementById('mockupPhrase').textContent   = buildPhrase(aH, aM);
+        document.getElementById('mockupModifier').textContent = delta < -60 ? 'קצת לפני' : delta > 60 ? 'קצת אחרי' : '';
+        const effH = aM >= 45 ? (aH + 1) % 24 : aH;
+        document.getElementById('mockupSuffix').textContent   = suffix(effH);
+
+        // Status bar digital clock
+        const hh = String(h24).padStart(2, '0');
+        const mm = String(m).padStart(2, '0');
+        document.getElementById('mockupTime').textContent = hh + ':' + mm;
+    }
+
+    tick();
+    setInterval(tick, 1000);
+</script>
+</body>
+</html>

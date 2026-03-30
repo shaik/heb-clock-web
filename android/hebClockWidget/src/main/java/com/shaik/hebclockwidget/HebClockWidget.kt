@@ -26,10 +26,12 @@ import androidx.glance.unit.ColorProvider
 class HebClockWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val niqqud   = WidgetPrefs.useNiqqud(context)
-        val t        = HebTime.getHebrewTime(niqqud = niqqud)
-        val isDark   = WidgetPrefs.theme(context) == "dark"
-        val fontSize = WidgetPrefs.fontSize(context).sp
+        val niqqud    = WidgetPrefs.useNiqqud(context)
+        val t         = HebTime.getHebrewTime(niqqud = niqqud)
+        val isDark    = WidgetPrefs.theme(context) == "dark"
+        val compact   = WidgetPrefs.compactLabels(context)
+        val fontSize  = WidgetPrefs.fontSize(context).sp
+        val labelSize = if (compact) 13.sp else fontSize
         scheduleNextUpdate(context)
 
         provideContent {
@@ -38,7 +40,9 @@ class HebClockWidget : GlanceAppWidget() {
                 phrase       = t.phrase,
                 suffix       = if (WidgetPrefs.showSuffix(context)) t.suffix else "",
                 isDark       = isDark,
-                fontSize     = fontSize
+                fontSize     = fontSize,
+                labelSize    = labelSize,
+                labelBold    = !compact
             )
         }
     }
@@ -50,7 +54,9 @@ fun HebClockContent(
     phrase: String,
     suffix: String,
     isDark: Boolean,
-    fontSize: TextUnit
+    fontSize: TextUnit,
+    labelSize: TextUnit,
+    labelBold: Boolean
 ) {
     val bgColor   = ColorProvider(if (isDark) Color(0xFF1a1a2eL) else Color(0xFFF5F5F0L))
     val mainColor = ColorProvider(if (isDark) Color.White else Color(0xFF1a1a2eL))
@@ -69,9 +75,10 @@ fun HebClockContent(
             Text(
                 text  = modifierText,
                 style = TextStyle(
-                    fontSize  = 13.sp,
-                    color     = dimColor,
-                    textAlign = TextAlign.Center
+                    fontSize   = labelSize,
+                    fontWeight = if (labelBold) FontWeight.Bold else null,
+                    color      = if (labelBold) mainColor else dimColor,
+                    textAlign  = TextAlign.Center
                 )
             )
         }
@@ -90,9 +97,10 @@ fun HebClockContent(
             Text(
                 text  = suffix,
                 style = TextStyle(
-                    fontSize  = 13.sp,
-                    color     = dimColor,
-                    textAlign = TextAlign.Center
+                    fontSize   = labelSize,
+                    fontWeight = if (labelBold) FontWeight.Bold else null,
+                    color      = if (labelBold) mainColor else dimColor,
+                    textAlign  = TextAlign.Center
                 )
             )
         }

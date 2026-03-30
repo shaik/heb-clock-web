@@ -35,6 +35,12 @@ object WidgetPrefs {
     fun setUseNiqqud(ctx: Context, v: Boolean) =
         prefs(ctx).edit().putBoolean("use_niqqud", v).apply()
 
+    fun compactLabels(ctx: Context): Boolean =
+        prefs(ctx).getBoolean("compact_labels", false)
+
+    fun setCompactLabels(ctx: Context, v: Boolean) =
+        prefs(ctx).edit().putBoolean("compact_labels", v).apply()
+
     private fun prefs(ctx: Context) =
         ctx.getSharedPreferences(NAME, Context.MODE_PRIVATE)
 }
