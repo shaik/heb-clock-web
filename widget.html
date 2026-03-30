@@ -299,7 +299,6 @@
         .feature-list li {
             display: flex;
             align-items: flex-start;
-            gap: 0.9rem;
             padding: 0.85rem 0;
             border-bottom: 1px solid var(--border);
             font-size: 0.95rem;
@@ -309,12 +308,6 @@
 
         .feature-list li:last-child {
             border-bottom: none;
-        }
-
-        .feature-icon {
-            font-size: 1.1rem;
-            line-height: 1.4;
-            flex-shrink: 0;
         }
 
         .feature-text strong {
@@ -396,6 +389,22 @@
             font-weight: 400;
         }
 
+        /* ── Credit ── */
+        .credit-line {
+            font-size: 0.85rem;
+            color: var(--text-faint);
+            padding-bottom: 3rem;
+        }
+
+        .credit-line a {
+            color: var(--text-dim);
+            text-decoration: none;
+        }
+
+        .credit-line a:hover {
+            text-decoration: underline;
+        }
+
         /* ── Divider ── */
         hr {
             border: none;
@@ -417,11 +426,13 @@
         }
 
         footer a {
-            color: var(--text-faint);
+            color: var(--text-dim);
             text-decoration: none;
+            font-weight: 400;
+            font-size: 0.9rem;
         }
         footer a:hover {
-            color: var(--text-dim);
+            color: var(--text);
             text-decoration: underline;
         }
 
@@ -498,35 +509,30 @@
         <p class="section-title">Features</p>
         <ul class="feature-list">
             <li>
-                <span class="feature-icon">🕐</span>
                 <div class="feature-text">
                     <strong>Updates every minute</strong>
                     <span>Precise alarm-driven updates, even when the screen wakes from sleep.</span>
                 </div>
             </li>
             <li>
-                <span class="feature-icon">🎨</span>
                 <div class="feature-text">
                     <strong>Dark &amp; light themes</strong>
                     <span>Choose the look that fits your home screen.</span>
                 </div>
             </li>
             <li>
-                <span class="feature-icon">🔠</span>
                 <div class="feature-text">
                     <strong>Three font sizes</strong>
                     <span>Small, medium, or large — with optional compact prefix and suffix.</span>
                 </div>
             </li>
             <li>
-                <span class="feature-icon">ּ◌</span>
                 <div class="feature-text">
                     <strong>Niqqud (vowel marks)</strong>
                     <span>Toggle vowel diacritics on or off.</span>
                 </div>
             </li>
             <li>
-                <span class="feature-icon">⚙️</span>
                 <div class="feature-text">
                     <strong>Tap to configure</strong>
                     <span>Tap the widget at any time to open the settings panel.</span>
@@ -547,6 +553,9 @@
             <span class="tag">עשרה לשתיים עשרה</span>
         </div>
     </section>
+
+    <!-- Credit -->
+    <p class="credit-line">Original idea by <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></p>
 
     <hr>
 
