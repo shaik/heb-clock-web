@@ -19,3 +19,5 @@ android/.cxx/
 *.apk
 *.aab
 *.keystore
+*.jks
+android/keystore/

@@ -15,10 +15,20 @@ android {
         versionName = "1.14"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile     = file("${rootProject.projectDir}/keystore/release.jks")
+            storePassword = "hebclock123"
+            keyAlias      = "hebclock"
+            keyPassword   = "hebclock123"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+            signingConfig = signingConfigs.getByName("release")
         }
         debug {
             // No suffix — same applicationId as release so new installs replace old ones
