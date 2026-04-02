@@ -340,15 +340,6 @@
             background: #aaa;
         }
 
-        .settings-handle.hint span {
-            animation: handleHint 2s ease-in-out 3;
-        }
-
-        @keyframes handleHint {
-            0%, 100% { opacity: 0.35; }
-            50% { opacity: 1; }
-        }
-
         /* ── Dark mode ── */
         body.dark {
             background: #121212;
@@ -428,6 +419,195 @@
             .settings-panel { max-height: 90dvh; }
             .panel-preview { font-size: 1.1rem; padding-bottom: 0.6rem; }
         }
+
+        /* ── Splash overlay ── */
+        .splash-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .splash-overlay.hiding { opacity: 0; }
+
+        .splash-card {
+            pointer-events: auto;
+            background: rgba(245, 245, 245, 0.97);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 22px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 40px rgba(0, 0, 0, 0.12);
+            padding: 1.5rem 1.8rem 1.2rem;
+            width: min(300px, 88vw);
+            direction: rtl;
+            position: relative;
+            user-select: none;
+            animation: splashCardIn 0.35s cubic-bezier(0.32, 0.72, 0, 1) both;
+        }
+
+        @keyframes splashCardIn {
+            from { transform: translateY(14px); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+
+        .splash-close {
+            position: absolute;
+            top: 0.75rem;
+            left: 0.9rem;
+            background: none;
+            border: none;
+            color: #bbb;
+            font-size: 1rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0.2rem 0.4rem;
+        }
+
+        .splash-close:hover { color: #777; }
+
+        .splash-title {
+            font-size: 1.6rem;
+            font-weight: 300;
+            text-align: center;
+            margin-bottom: 0.25rem;
+            letter-spacing: 0.02em;
+        }
+
+        .splash-tagline {
+            font-size: 0.82rem;
+            color: #aaa;
+            text-align: center;
+            margin-bottom: 1.2rem;
+        }
+
+        .splash-avail-label {
+            font-size: 0.72rem;
+            color: #bbb;
+            text-align: center;
+            margin-bottom: 0.55rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .splash-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.1rem;
+        }
+
+        .splash-option {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 0.65rem 0.9rem;
+            background: rgba(0, 0, 0, 0.04);
+            border-radius: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            border: none;
+            font: inherit;
+            text-align: right;
+            width: 100%;
+            transition: background 0.15s;
+        }
+
+        .splash-option:hover { background: rgba(0, 0, 0, 0.08); }
+
+        .splash-option-title {
+            font-size: 0.95rem;
+            font-weight: 400;
+            color: #1a1a1a;
+        }
+
+        .splash-option-desc {
+            font-size: 0.75rem;
+            color: #aaa;
+            margin-top: 0.15rem;
+        }
+
+        .splash-footer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .splash-footer span {
+            font-size: 0.75rem;
+            color: #bbb;
+            text-align: center;
+        }
+
+        .splash-footer .splash-credit { color: #aaa; }
+        .splash-footer a { color: inherit; }
+
+        .splash-no-show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            font-size: 0.78rem;
+            color: #bbb;
+            cursor: pointer;
+            margin-bottom: 0.8rem;
+        }
+
+        .splash-no-show input { accent-color: #aaa; cursor: pointer; }
+
+        body.dark .splash-tagline    { color: #888; }
+        body.dark .splash-avail-label { color: #777; }
+        body.dark .splash-footer span { color: #888; }
+        body.dark .splash-footer .splash-credit { color: #777; }
+        body.dark .splash-no-show { color: #777; }
+
+        .splash-progress {
+            height: 2px;
+            background: rgba(0, 0, 0, 0.07);
+            border-radius: 1px;
+            overflow: hidden;
+        }
+
+        .splash-bar {
+            height: 100%;
+            background: #ddd;
+            border-radius: 1px;
+            transform-origin: right;
+            animation: splashProgress 7s linear forwards;
+        }
+
+        @keyframes splashProgress {
+            from { transform: scaleX(1); }
+            to   { transform: scaleX(0); }
+        }
+
+        body.dark .splash-card {
+            background: rgba(22, 22, 22, 0.99);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark .splash-option {
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        body.dark .splash-option:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        body.dark .splash-option-title { color: #e8e8e8; }
+        body.dark .splash-option-desc  { color: #999; }
+        body.dark .splash-close        { color: #666; }
+        body.dark .splash-close:hover  { color: #aaa; }
+        body.dark .splash-progress     { background: rgba(255, 255, 255, 0.08); }
+        body.dark .splash-bar          { background: #555; }
     </style>
 </head>
 <body>
@@ -435,6 +615,35 @@
     <div class="modifier" id="modifier"></div>
     <div class="hebrew-time" id="hebrewTime"></div>
     <div class="day-part" id="dayPart"></div>
+
+    <div class="splash-overlay" id="splashOverlay" style="display:none">
+        <div class="splash-card">
+            <button class="splash-close" id="splashClose" aria-label="סגור">✕</button>
+            <div class="splash-title">שעון עברי</div>
+            <div class="splash-tagline">מה השעה? בעברית, כמובן.</div>
+            <div class="splash-avail-label">גם זמין כ:</div>
+            <div class="splash-options">
+                <button class="splash-option" id="splashInstall">
+                    <div class="splash-option-title">אפליקציה לכרום</div>
+                    <div class="splash-option-desc">התקן ישירות מהדפדפן</div>
+                </button>
+                <a class="splash-option" href="https://shaik.github.io/heb-clock-web/widget.html" target="_blank" id="splashAndroid">
+                    <div class="splash-option-title">ווידג׳ט לאנדרואיד</div>
+                    <div class="splash-option-desc">שעון על מסך הבית</div>
+                </a>
+            </div>
+            <div class="splash-footer">
+                <span>לחיצה על השעה פותחת את ההגדרות</span>
+                <span class="splash-credit">עיצוב ופיתוח: שי כפיר</span>
+                <span>רעיון מקורי: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">מתי מריאנסקי</a></span>
+            </div>
+            <label class="splash-no-show">
+                <input type="checkbox" id="splashNoShow">
+                <span>אל תציג שוב</span>
+            </label>
+            <div class="splash-progress"><div class="splash-bar"></div></div>
+        </div>
+    </div>
 
     <div class="panel-backdrop" id="panelBackdrop"></div>
     <div class="settings-handle" id="settingsHandle"><span></span></div>
@@ -520,7 +729,7 @@
 
                 <div class="panel-footer">
                     <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
-                    <span class="version">v2.03</span>
+                    <span class="version">v2.08</span>
                 </div>
             </div>
         </div>
@@ -974,8 +1183,6 @@
     const elBackdrop = document.getElementById('panelBackdrop');
 
     function openSettings() {
-        elHandle.classList.remove('hint');
-        localStorage.setItem('hc_seen', '1');
         elPanel.classList.add('open');
         elBackdrop.classList.add('active');
         elHandle.style.display = 'none';
@@ -985,14 +1192,6 @@
         elPanel.classList.remove('open');
         elBackdrop.classList.remove('active');
         elHandle.style.display = '';
-    }
-
-    if (!localStorage.getItem('hc_seen')) {
-        elHandle.classList.add('hint');
-        elHandle.addEventListener('animationend', () => {
-            elHandle.classList.remove('hint');
-            localStorage.setItem('hc_seen', '1');
-        }, { once: true });
     }
 
     elHandle.addEventListener('click', () => {
@@ -1015,6 +1214,7 @@
         installPrompt = e;
         elInstallGroup.style.display = '';
         elInstallBtn.style.display = '';
+        document.getElementById('splashInstall').style.display = '';
     });
 
     elInstallBtn.addEventListener('click', async () => {
@@ -1103,6 +1303,43 @@
 
     document.addEventListener('fullscreenchange', applyFullscreen);
     document.addEventListener('webkitfullscreenchange', applyFullscreen);
+
+    // Splash overlay — shown on every visit unless user opts out
+    const elSplash = document.getElementById('splashOverlay');
+    const elSplashClose = document.getElementById('splashClose');
+    const elSplashInstallBtn = document.getElementById('splashInstall');
+    const elSplashNoShow = document.getElementById('splashNoShow');
+    let splashTimer = null;
+
+    function dismissSplash() {
+        if (elSplash.style.display === 'none') return;
+        clearTimeout(splashTimer);
+        if (elSplashNoShow.checked) localStorage.setItem('hc_seen', '1');
+        elSplash.classList.add('hiding');
+        setTimeout(() => { elSplash.style.display = 'none'; }, 400);
+    }
+
+    if (!localStorage.getItem('hc_seen')) {
+        elSplash.style.display = '';
+        splashTimer = setTimeout(dismissSplash, 7000);
+    }
+
+    elSplashClose.addEventListener('click', dismissSplash);
+
+    elSplashInstallBtn.addEventListener('click', () => {
+        dismissSplash();
+        if (installPrompt) {
+            installPrompt.prompt();
+            installPrompt.userChoice.then(({ outcome }) => {
+                if (outcome === 'accepted') {
+                    elInstallGroup.style.display = 'none';
+                    installPrompt = null;
+                }
+            });
+        }
+    });
+
+    document.getElementById('splashAndroid').addEventListener('click', dismissSplash);
 
     // Service worker registration
     if ('serviceWorker' in navigator) {
