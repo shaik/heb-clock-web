@@ -581,7 +581,7 @@
             background: #ddd;
             border-radius: 1px;
             transform-origin: right;
-            animation: splashProgress 7s linear forwards;
+            animation: splashProgress 4s linear forwards;
         }
 
         @keyframes splashProgress {
@@ -729,7 +729,7 @@
 
                 <div class="panel-footer">
                     <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
-                    <span class="version">v2.08</span>
+                    <span class="version">v2.09</span>
                 </div>
             </div>
         </div>
@@ -1321,7 +1321,7 @@
 
     if (!localStorage.getItem('hc_seen')) {
         elSplash.style.display = '';
-        splashTimer = setTimeout(dismissSplash, 7000);
+        splashTimer = setTimeout(dismissSplash, 4000);
     }
 
     elSplashClose.addEventListener('click', dismissSplash);
