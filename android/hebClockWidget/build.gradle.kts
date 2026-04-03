@@ -1,6 +1,14 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("com.github.triplet.play")
+}
+
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) load(f.inputStream())
 }
 
 android {
@@ -10,17 +18,17 @@ android {
     defaultConfig {
         applicationId = "com.shaik.hebclockwidget"
         minSdk = 26
-        targetSdk = 34
-        versionCode = 6
-        versionName = "1.15"
+        targetSdk = 35
+        versionCode = 8
+        versionName = "1.16"
     }
 
     signingConfigs {
         create("release") {
-            storeFile     = file("${rootProject.projectDir}/keystore/release.jks")
-            storePassword = "hebclock123"
-            keyAlias      = "hebclock"
-            keyPassword   = "hebclock123"
+            storeFile     = file("${rootProject.projectDir}/${localProps["keystore.path"]}")
+            storePassword = localProps["keystore.storePassword"] as String
+            keyAlias      = localProps["keystore.keyAlias"] as String
+            keyPassword   = localProps["keystore.keyPassword"] as String
         }
     }
 
@@ -56,6 +64,12 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.8"
     }
+}
+
+play {
+    serviceAccountCredentials = file("${rootProject.projectDir}/${localProps["play.serviceAccountJson"]}")
+    track = "internal"
+    defaultToAppBundles = true
 }
 
 dependencies {

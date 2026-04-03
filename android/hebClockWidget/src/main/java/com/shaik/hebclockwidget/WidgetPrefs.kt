@@ -30,7 +30,7 @@ object WidgetPrefs {
         prefs(ctx).edit().putInt("font_size", v).apply()
 
     fun useNiqqud(ctx: Context): Boolean =
-        prefs(ctx).getBoolean("use_niqqud", false)
+        prefs(ctx).getBoolean("use_niqqud", true)
 
     fun setUseNiqqud(ctx: Context, v: Boolean) =
         prefs(ctx).edit().putBoolean("use_niqqud", v).apply()
