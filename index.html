@@ -738,7 +738,7 @@
 
                 <div class="panel-footer">
                     <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
-                    <span class="version">v2.12</span>
+                    <span class="version">v2.13</span>
                 </div>
             </div>
         </div>
@@ -1138,7 +1138,7 @@
 
     const THEME_MODES = ['auto', 'day', 'night'];
     const THEME_LABELS = { auto: 'אוטו', day: 'יום', night: 'לילה' };
-    let themeMode = localStorage.getItem('hc_theme') || 'auto';
+    let themeMode = localStorage.getItem('hc_theme') || 'night';
     if (!THEME_MODES.includes(themeMode)) themeMode = 'auto';
 
     let geoLat = parseFloat(localStorage.getItem('hc_lat')) || null;
