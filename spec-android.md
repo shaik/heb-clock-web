@@ -194,10 +194,13 @@ Stored in `SharedPreferences` file `"widget_prefs"`. Accessed via `WidgetPrefs.k
 | Setting | Control |
 |---------|---------|
 | Theme | `RadioGroup` — Dark / Light |
-| Show suffix | `Switch` |
+| Show suffix | `Switch` (master toggle) |
+| Suffix schedule | 7 programmatic rows — each: `CheckBox` + Hebrew label + from `Spinner` + `–` + until `Spinner` |
 | Show modifier | `Switch` |
 | Niqqud | `Switch` |
 | Font size | `RadioGroup` — Small / Medium / Large |
+
+The suffix schedule rows are built programmatically in `onCreate` from `WidgetPrefs.suffixSlots()`. Rows dim/disable when the master suffix toggle is off. Each checkbox also disables its own time spinners when unchecked. On Save, all 7 slots are written via `WidgetPrefs.setSuffixSlot()`.
 
 ---
 

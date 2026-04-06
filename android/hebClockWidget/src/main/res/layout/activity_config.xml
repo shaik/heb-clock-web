@@ -98,6 +98,27 @@
 
         </LinearLayout>
 
+        <!-- Suffix slot schedule label -->
+        <TextView
+            android:id="@+id/tv_suffix_slots_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Suffix schedule"
+            android:textColor="#AAAACC"
+            android:textSize="12sp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.1"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Suffix slot rows (populated programmatically) -->
+        <LinearLayout
+            android:id="@+id/suffix_slots_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="20dp" />
+
         <!-- Show modifier -->
         <LinearLayout
             android:layout_width="match_parent"
