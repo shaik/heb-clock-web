@@ -309,6 +309,24 @@
         body.dark .suffix-from-select:hover { background-color: #444; }
         body.dark .suffix-from-select:disabled { opacity: 0.25; }
 
+        .suffix-group {
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: 12px;
+            margin: 0.3rem 0;
+            overflow: hidden;
+        }
+
+        .suffix-group-header {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.07) !important;
+        }
+
+        .suffix-entry-row:last-child {
+            border-bottom: none !important;
+        }
+
+        body.dark .suffix-group { background: rgba(255, 255, 255, 0.04); }
+        body.dark .suffix-group-header { border-bottom-color: rgba(255, 255, 255, 0.07) !important; }
+
         .font-select {
             height: 38px;
             border: none;
@@ -749,11 +767,13 @@
                     <button class="toggle-btn" id="toggleSplit">שורה נפרדת</button>
                 </div>
 
-                <div class="settings-row">
-                    <span class="row-label">סיומת שעה</span>
-                    <button class="toggle-btn" id="suffixResetBtn">אפס</button>
+                <div class="suffix-group">
+                    <div class="settings-row suffix-group-header">
+                        <span class="row-label">סיומת שעה</span>
+                        <button class="toggle-btn" id="suffixResetBtn">ברירת מחדל</button>
+                    </div>
+                    <div id="suffixRows"></div>
                 </div>
-                <div id="suffixRows"></div>
 
                 <div class="settings-row">
                     <span class="row-label">ניקוד</span>
@@ -792,7 +812,7 @@
 
                 <div class="panel-footer">
                     <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
-                    <span class="version">v2.14</span>
+                    <span class="version">v2.15</span>
                 </div>
             </div>
         </div>
@@ -838,8 +858,7 @@
     const SUFFIX_DEFS = [
         { id: 'lifnot_boker', plain: 'לפנות בוקר',    niqqud: 'לִפְנוֹת בֹּקֶר',       defaultEnabled: false, defaultFrom: 4  },
         { id: 'baboker',      plain: 'בבוקר',           niqqud: 'בַּבֹּקֶר',              defaultEnabled: true,  defaultFrom: 5  },
-        { id: 'none',         plain: '',                 niqqud: '',                        defaultEnabled: true,  defaultFrom: 10 },
-        { id: 'batsahorayim', plain: 'בצהריים',         niqqud: 'בַּצָּהֳרַיִם',           defaultEnabled: false, defaultFrom: 12 },
+{ id: 'batsahorayim', plain: 'בצהריים',         niqqud: 'בַּצָּהֳרַיִם',           defaultEnabled: false, defaultFrom: 12 },
         { id: 'aharei',       plain: 'אחרי הצהריים',    niqqud: 'אַחֲרֵי הַצָּהֳרַיִם',    defaultEnabled: false, defaultFrom: 14 },
         { id: 'lifnot_erev',  plain: 'לפנות ערב',       niqqud: 'לִפְנוֹת עֶרֶב',         defaultEnabled: false, defaultFrom: 17 },
         { id: 'baerev',       plain: 'בערב',            niqqud: 'בָּעֶרֶב',               defaultEnabled: true,  defaultFrom: 18 },
@@ -1188,8 +1207,8 @@
             chk.className = 'suffix-chk';
             chk.checked = cfg.enabled;
             const span = document.createElement('span');
-            span.className = 'suffix-chk-text' + (def.id === 'none' ? ' is-none' : '');
-            span.textContent = def.id === 'none' ? '–' : def.plain;
+            span.className = 'suffix-chk-text';
+            span.textContent = def.plain;
             labelEl.appendChild(chk);
             labelEl.appendChild(span);
 
