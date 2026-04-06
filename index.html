@@ -256,6 +256,59 @@
             cursor: default;
         }
 
+        .suffix-entry-row {
+            min-height: 46px;
+            padding: 0.35rem 0;
+        }
+
+        .suffix-chk-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .suffix-chk {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #555;
+            flex-shrink: 0;
+        }
+
+        .suffix-chk-text {
+            font-size: 0.92rem;
+            color: #333;
+            font-family: 'Heebo', sans-serif;
+        }
+
+        .suffix-chk-text.is-none { color: #aaa; }
+
+        .suffix-from-select {
+            height: 34px;
+            border: none;
+            border-radius: 8px;
+            background: #e6e6e6;
+            color: #333;
+            font-size: 0.88rem;
+            font-family: 'Heebo', sans-serif;
+            padding: 0 8px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            min-width: 64px;
+            text-align: center;
+        }
+
+        .suffix-from-select:hover { background-color: #dadada; }
+        .suffix-from-select:disabled { opacity: 0.3; cursor: default; }
+
+        body.dark .suffix-chk-text { color: #ccc; }
+        body.dark .suffix-chk-text.is-none { color: #666; }
+        body.dark .suffix-from-select { background: #383838; color: #ddd; }
+        body.dark .suffix-from-select:hover { background-color: #444; }
+        body.dark .suffix-from-select:disabled { opacity: 0.25; }
+
         .font-select {
             height: 38px;
             border: none;
@@ -697,9 +750,10 @@
                 </div>
 
                 <div class="settings-row">
-                    <span class="row-label">בוקר / ערב</span>
-                    <button class="toggle-btn" id="toggleSuffix">הסתר</button>
+                    <span class="row-label">סיומת שעה</span>
+                    <button class="toggle-btn" id="suffixResetBtn">אפס</button>
                 </div>
+                <div id="suffixRows"></div>
 
                 <div class="settings-row">
                     <span class="row-label">ניקוד</span>
@@ -738,7 +792,7 @@
 
                 <div class="panel-footer">
                     <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
-                    <span class="version">v2.13</span>
+                    <span class="version">v2.14</span>
                 </div>
             </div>
         </div>
@@ -781,6 +835,17 @@
         morning: 'בַּבֹּקֶר', evening: 'בָּעֶרֶב', night: 'בַּלַּיְלָה',
     };
 
+    const SUFFIX_DEFS = [
+        { id: 'lifnot_boker', plain: 'לפנות בוקר',    niqqud: 'לִפְנוֹת בֹּקֶר',       defaultEnabled: false, defaultFrom: 4  },
+        { id: 'baboker',      plain: 'בבוקר',           niqqud: 'בַּבֹּקֶר',              defaultEnabled: true,  defaultFrom: 5  },
+        { id: 'none',         plain: '',                 niqqud: '',                        defaultEnabled: true,  defaultFrom: 10 },
+        { id: 'batsahorayim', plain: 'בצהריים',         niqqud: 'בַּצָּהֳרַיִם',           defaultEnabled: false, defaultFrom: 12 },
+        { id: 'aharei',       plain: 'אחרי הצהריים',    niqqud: 'אַחֲרֵי הַצָּהֳרַיִם',    defaultEnabled: false, defaultFrom: 14 },
+        { id: 'lifnot_erev',  plain: 'לפנות ערב',       niqqud: 'לִפְנוֹת עֶרֶב',         defaultEnabled: false, defaultFrom: 17 },
+        { id: 'baerev',       plain: 'בערב',            niqqud: 'בָּעֶרֶב',               defaultEnabled: true,  defaultFrom: 18 },
+        { id: 'balailah',     plain: 'בלילה',           niqqud: 'בַּלַּיְלָה',             defaultEnabled: true,  defaultFrom: 22 },
+    ];
+
     const niqqudStored = localStorage.getItem('hc_niqqud');
     let useNiqqud = niqqudStored === null ? true : niqqudStored === 'true';
     let txt = useNiqqud ? NIQQUD : PLAIN;
@@ -813,10 +878,16 @@
 
     function dayPartSuffix(hour24) {
         const h = ((hour24 % 24) + 24) % 24;
-        if (h >= 5  && h <= 9)  return txt.morning;
-        if (h >= 10 && h <= 17) return '';
-        if (h >= 18 && h <= 21) return txt.evening;
-        return txt.night;
+        const enabled = suffixConfig
+            .map((c, i) => ({ enabled: c.enabled, from: c.from, def: SUFFIX_DEFS[i] }))
+            .filter(s => s.enabled)
+            .sort((a, b) => a.from - b.from);
+        if (enabled.length === 0) return '';
+        let result = enabled[enabled.length - 1]; // last wraps past midnight
+        for (const s of enabled) {
+            if (s.from <= h) result = s;
+        }
+        return useNiqqud ? result.def.niqqud : result.def.plain;
     }
 
     function getHebrewTime(date) {
@@ -862,8 +933,20 @@
 
     let prevDisplay = '';
     let splitModifier = localStorage.getItem('hc_split') !== 'false';
-    const suffixStored = localStorage.getItem('hc_suffix');
-    let suffixVisible = suffixStored === null ? true : suffixStored !== 'false';
+    function defaultSuffixConfig() {
+        return SUFFIX_DEFS.map(d => ({ enabled: d.defaultEnabled, from: d.defaultFrom }));
+    }
+    function loadSuffixConfig() {
+        const stored = localStorage.getItem('hc_suffixes');
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed) && parsed.length === SUFFIX_DEFS.length) return parsed;
+            } catch(e) {}
+        }
+        return defaultSuffixConfig();
+    }
+    let suffixConfig = loadSuffixConfig();
 
     let fadeTimeout = null;
 
@@ -879,7 +962,7 @@
             }
         }
 
-        const shownSuffix = suffixVisible ? suffix : '';
+        const shownSuffix = suffix;
 
         // Always keep preview in sync with current text and settings
         elPreview.textContent = [modLine, mainLine, shownSuffix].filter(Boolean).join(' ');
@@ -1068,20 +1151,91 @@
         applySplit();
     });
 
-    function applySuffix() {
-        document.getElementById('toggleSuffix').textContent =
-            suffixVisible ? 'הסתר' : 'הצג';
-        localStorage.setItem('hc_suffix', suffixVisible);
-        prevDisplay = '';
-        if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix);
+    function saveSuffixConfig() {
+        localStorage.setItem('hc_suffixes', JSON.stringify(suffixConfig));
     }
 
-    applySuffix();
+    function enforceOverlapFrom(changedIdx) {
+        const enabled = suffixConfig
+            .map((c, i) => ({ i, from: c.from, enabled: c.enabled }))
+            .filter(c => c.enabled)
+            .sort((a, b) => a.from - b.from);
+        const changedPos = enabled.findIndex(e => e.i === changedIdx);
+        if (changedPos === -1) return;
+        for (let k = changedPos + 1; k < enabled.length; k++) {
+            if (enabled[k].from <= enabled[k - 1].from)
+                enabled[k].from = Math.min(23, enabled[k - 1].from + 1);
+        }
+        for (let k = changedPos - 1; k >= 0; k--) {
+            if (enabled[k].from >= enabled[k + 1].from)
+                enabled[k].from = Math.max(0, enabled[k + 1].from - 1);
+        }
+        for (const e of enabled) suffixConfig[e.i].from = e.from;
+    }
 
-    document.getElementById('toggleSuffix').addEventListener('click', () => {
-        suffixVisible = !suffixVisible;
-        applySuffix();
+    function refreshSuffixRows() {
+        const container = document.getElementById('suffixRows');
+        container.innerHTML = '';
+        SUFFIX_DEFS.forEach((def, i) => {
+            const cfg = suffixConfig[i];
+            const row = document.createElement('div');
+            row.className = 'settings-row suffix-entry-row';
+
+            const labelEl = document.createElement('label');
+            labelEl.className = 'suffix-chk-label';
+            const chk = document.createElement('input');
+            chk.type = 'checkbox';
+            chk.className = 'suffix-chk';
+            chk.checked = cfg.enabled;
+            const span = document.createElement('span');
+            span.className = 'suffix-chk-text' + (def.id === 'none' ? ' is-none' : '');
+            span.textContent = def.id === 'none' ? '–' : def.plain;
+            labelEl.appendChild(chk);
+            labelEl.appendChild(span);
+
+            const sel = document.createElement('select');
+            sel.className = 'suffix-from-select';
+            sel.disabled = !cfg.enabled;
+            for (let h = 0; h < 24; h++) {
+                const opt = document.createElement('option');
+                opt.value = h;
+                opt.textContent = String(h).padStart(2, '0') + ':00';
+                if (h === cfg.from) opt.selected = true;
+                sel.appendChild(opt);
+            }
+
+            row.appendChild(labelEl);
+            row.appendChild(sel);
+            container.appendChild(row);
+
+            chk.addEventListener('change', () => {
+                suffixConfig[i].enabled = chk.checked;
+                sel.disabled = !chk.checked;
+                saveSuffixConfig();
+                prevDisplay = '';
+                if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix);
+            });
+
+            sel.addEventListener('change', () => {
+                suffixConfig[i].from = parseInt(sel.value, 10);
+                enforceOverlapFrom(i);
+                saveSuffixConfig();
+                refreshSuffixRows();
+                prevDisplay = '';
+                if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix);
+            });
+        });
+    }
+
+    document.getElementById('suffixResetBtn').addEventListener('click', () => {
+        suffixConfig = defaultSuffixConfig();
+        saveSuffixConfig();
+        refreshSuffixRows();
+        prevDisplay = '';
+        if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix);
     });
+
+    refreshSuffixRows();
 
     function applyNiqqud() {
         txt = useNiqqud ? NIQQUD : PLAIN;
