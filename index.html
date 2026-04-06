@@ -769,7 +769,10 @@
 
                 <div class="suffix-group">
                     <div class="settings-row suffix-group-header">
-                        <span class="row-label">הגדרות סיומת שעה</span>
+                        <label class="suffix-chk-label">
+                            <input type="checkbox" class="suffix-chk" id="suffixMasterChk">
+                            <span class="row-label">השתמש בסיומת שעה</span>
+                        </label>
                         <button class="toggle-btn" id="suffixResetBtn">ברירת מחדל</button>
                     </div>
                     <div id="suffixRows"></div>
@@ -812,7 +815,7 @@
 
                 <div class="panel-footer">
                     <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
-                    <span class="version">v2.16</span>
+                    <span class="version">v2.17</span>
                 </div>
             </div>
         </div>
@@ -896,6 +899,7 @@
     }
 
     function dayPartSuffix(hour24) {
+        if (!suffixMasterEnabled) return '';
         const h = ((hour24 % 24) + 24) % 24;
         const enabled = suffixConfig
             .map((c, i) => ({ enabled: c.enabled, from: c.from, def: SUFFIX_DEFS[i] }))
@@ -966,6 +970,7 @@
         return defaultSuffixConfig();
     }
     let suffixConfig = loadSuffixConfig();
+    let suffixMasterEnabled = localStorage.getItem('hc_suffix_on') !== 'false';
 
     let fadeTimeout = null;
 
@@ -1206,6 +1211,7 @@
             chk.type = 'checkbox';
             chk.className = 'suffix-chk';
             chk.checked = cfg.enabled;
+            chk.disabled = !suffixMasterEnabled;
             const span = document.createElement('span');
             span.className = 'suffix-chk-text';
             span.textContent = def.plain;
@@ -1214,7 +1220,7 @@
 
             const sel = document.createElement('select');
             sel.className = 'suffix-from-select';
-            sel.disabled = !cfg.enabled;
+            sel.disabled = !cfg.enabled || !suffixMasterEnabled;
             for (let h = 0; h < 24; h++) {
                 const opt = document.createElement('option');
                 opt.value = h;
@@ -1245,6 +1251,15 @@
             });
         });
     }
+
+    document.getElementById('suffixMasterChk').checked = suffixMasterEnabled;
+    document.getElementById('suffixMasterChk').addEventListener('change', (e) => {
+        suffixMasterEnabled = e.target.checked;
+        localStorage.setItem('hc_suffix_on', suffixMasterEnabled);
+        refreshSuffixRows();
+        prevDisplay = '';
+        if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix);
+    });
 
     document.getElementById('suffixResetBtn').addEventListener('click', () => {
         suffixConfig = defaultSuffixConfig();
