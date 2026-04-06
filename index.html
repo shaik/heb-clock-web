@@ -309,6 +309,20 @@
         body.dark .suffix-from-select:hover { background-color: #444; }
         body.dark .suffix-from-select:disabled { opacity: 0.25; }
 
+        .suffix-range {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            flex-shrink: 0;
+        }
+
+        .suffix-range-sep {
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
+        body.dark .suffix-range-sep { color: #555; }
+
         .suffix-group {
             background: rgba(0, 0, 0, 0.03);
             border-radius: 12px;
@@ -815,7 +829,7 @@
 
                 <div class="panel-footer">
                     <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
-                    <span class="version">v2.17</span>
+                    <span class="version">v2.18</span>
                 </div>
             </div>
         </div>
@@ -859,13 +873,13 @@
     };
 
     const SUFFIX_DEFS = [
-        { id: 'lifnot_boker', plain: 'לפנות בוקר',    niqqud: 'לִפְנוֹת בֹּקֶר',       defaultEnabled: false, defaultFrom: 4  },
-        { id: 'baboker',      plain: 'בבוקר',           niqqud: 'בַּבֹּקֶר',              defaultEnabled: true,  defaultFrom: 5  },
-{ id: 'batsahorayim', plain: 'בצהריים',         niqqud: 'בַּצָּהֳרַיִם',           defaultEnabled: false, defaultFrom: 12 },
-        { id: 'aharei',       plain: 'אחרי הצהריים',    niqqud: 'אַחֲרֵי הַצָּהֳרַיִם',    defaultEnabled: false, defaultFrom: 14 },
-        { id: 'lifnot_erev',  plain: 'לפנות ערב',       niqqud: 'לִפְנוֹת עֶרֶב',         defaultEnabled: false, defaultFrom: 17 },
-        { id: 'baerev',       plain: 'בערב',            niqqud: 'בָּעֶרֶב',               defaultEnabled: true,  defaultFrom: 18 },
-        { id: 'balailah',     plain: 'בלילה',           niqqud: 'בַּלַּיְלָה',             defaultEnabled: true,  defaultFrom: 22 },
+        { id: 'lifnot_boker', plain: 'לפנות בוקר',    niqqud: 'לִפְנוֹת בֹּקֶר',       defaultEnabled: false, defaultFrom: 4,  defaultUntil: 5  },
+        { id: 'baboker',      plain: 'בבוקר',           niqqud: 'בַּבֹּקֶר',              defaultEnabled: true,  defaultFrom: 5,  defaultUntil: 10 },
+        { id: 'batsahorayim', plain: 'בצהריים',         niqqud: 'בַּצָּהֳרַיִם',           defaultEnabled: false, defaultFrom: 10, defaultUntil: 14 },
+        { id: 'aharei',       plain: 'אחרי הצהריים',    niqqud: 'אַחֲרֵי הַצָּהֳרַיִם',    defaultEnabled: false, defaultFrom: 14, defaultUntil: 17 },
+        { id: 'lifnot_erev',  plain: 'לפנות ערב',       niqqud: 'לִפְנוֹת עֶרֶב',         defaultEnabled: false, defaultFrom: 17, defaultUntil: 18 },
+        { id: 'baerev',       plain: 'בערב',            niqqud: 'בָּעֶרֶב',               defaultEnabled: true,  defaultFrom: 18, defaultUntil: 22 },
+        { id: 'balailah',     plain: 'בלילה',           niqqud: 'בַּלַּיְלָה',             defaultEnabled: true,  defaultFrom: 22, defaultUntil: 5  },
     ];
 
     const niqqudStored = localStorage.getItem('hc_niqqud');
@@ -901,16 +915,15 @@
     function dayPartSuffix(hour24) {
         if (!suffixMasterEnabled) return '';
         const h = ((hour24 % 24) + 24) % 24;
-        const enabled = suffixConfig
-            .map((c, i) => ({ enabled: c.enabled, from: c.from, def: SUFFIX_DEFS[i] }))
-            .filter(s => s.enabled)
-            .sort((a, b) => a.from - b.from);
-        if (enabled.length === 0) return '';
-        let result = enabled[enabled.length - 1]; // last wraps past midnight
-        for (const s of enabled) {
-            if (s.from <= h) result = s;
+        for (let i = 0; i < SUFFIX_DEFS.length; i++) {
+            const { enabled, from, until } = suffixConfig[i];
+            if (!enabled) continue;
+            const inRange = from < until
+                ? (h >= from && h < until)
+                : (h >= from || h < until); // wraps midnight
+            if (inRange) return useNiqqud ? SUFFIX_DEFS[i].niqqud : SUFFIX_DEFS[i].plain;
         }
-        return useNiqqud ? result.def.niqqud : result.def.plain;
+        return '';
     }
 
     function getHebrewTime(date) {
@@ -957,14 +970,19 @@
     let prevDisplay = '';
     let splitModifier = localStorage.getItem('hc_split') !== 'false';
     function defaultSuffixConfig() {
-        return SUFFIX_DEFS.map(d => ({ enabled: d.defaultEnabled, from: d.defaultFrom }));
+        return SUFFIX_DEFS.map(d => ({ enabled: d.defaultEnabled, from: d.defaultFrom, until: d.defaultUntil }));
     }
     function loadSuffixConfig() {
         const stored = localStorage.getItem('hc_suffixes');
         if (stored) {
             try {
                 const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed) && parsed.length === SUFFIX_DEFS.length) return parsed;
+                if (Array.isArray(parsed) && parsed.length === SUFFIX_DEFS.length)
+                    return parsed.map((c, i) => ({
+                        enabled: c.enabled,
+                        from:    c.from,
+                        until:   c.until !== undefined ? c.until : SUFFIX_DEFS[i].defaultUntil,
+                    }));
             } catch(e) {}
         }
         return defaultSuffixConfig();
@@ -1179,22 +1197,18 @@
         localStorage.setItem('hc_suffixes', JSON.stringify(suffixConfig));
     }
 
-    function enforceOverlapFrom(changedIdx) {
-        const enabled = suffixConfig
-            .map((c, i) => ({ i, from: c.from, enabled: c.enabled }))
-            .filter(c => c.enabled)
-            .sort((a, b) => a.from - b.from);
-        const changedPos = enabled.findIndex(e => e.i === changedIdx);
-        if (changedPos === -1) return;
-        for (let k = changedPos + 1; k < enabled.length; k++) {
-            if (enabled[k].from <= enabled[k - 1].from)
-                enabled[k].from = Math.min(23, enabled[k - 1].from + 1);
+    function makeHourSelect(cls, currentVal, disabled) {
+        const sel = document.createElement('select');
+        sel.className = cls;
+        sel.disabled = disabled;
+        for (let h = 0; h < 24; h++) {
+            const opt = document.createElement('option');
+            opt.value = h;
+            opt.textContent = String(h).padStart(2, '0') + ':00';
+            if (h === currentVal) opt.selected = true;
+            sel.appendChild(opt);
         }
-        for (let k = changedPos - 1; k >= 0; k--) {
-            if (enabled[k].from >= enabled[k + 1].from)
-                enabled[k].from = Math.max(0, enabled[k + 1].from - 1);
-        }
-        for (const e of enabled) suffixConfig[e.i].from = e.from;
+        return sel;
     }
 
     function refreshSuffixRows() {
@@ -1202,6 +1216,7 @@
         container.innerHTML = '';
         SUFFIX_DEFS.forEach((def, i) => {
             const cfg = suffixConfig[i];
+            const inactive = !cfg.enabled || !suffixMasterEnabled;
             const row = document.createElement('div');
             row.className = 'settings-row suffix-entry-row';
 
@@ -1218,34 +1233,39 @@
             labelEl.appendChild(chk);
             labelEl.appendChild(span);
 
-            const sel = document.createElement('select');
-            sel.className = 'suffix-from-select';
-            sel.disabled = !cfg.enabled || !suffixMasterEnabled;
-            for (let h = 0; h < 24; h++) {
-                const opt = document.createElement('option');
-                opt.value = h;
-                opt.textContent = String(h).padStart(2, '0') + ':00';
-                if (h === cfg.from) opt.selected = true;
-                sel.appendChild(opt);
-            }
+            const rangeEl = document.createElement('div');
+            rangeEl.className = 'suffix-range';
+            const fromSel  = makeHourSelect('suffix-from-select', cfg.from,  inactive);
+            const sep      = document.createElement('span');
+            sep.className  = 'suffix-range-sep';
+            sep.textContent = '–';
+            const untilSel = makeHourSelect('suffix-from-select', cfg.until, inactive);
+            rangeEl.appendChild(fromSel);
+            rangeEl.appendChild(sep);
+            rangeEl.appendChild(untilSel);
 
             row.appendChild(labelEl);
-            row.appendChild(sel);
+            row.appendChild(rangeEl);
             container.appendChild(row);
 
             chk.addEventListener('change', () => {
                 suffixConfig[i].enabled = chk.checked;
-                sel.disabled = !chk.checked;
+                fromSel.disabled = untilSel.disabled = !chk.checked;
                 saveSuffixConfig();
                 prevDisplay = '';
                 if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix);
             });
 
-            sel.addEventListener('change', () => {
-                suffixConfig[i].from = parseInt(sel.value, 10);
-                enforceOverlapFrom(i);
+            fromSel.addEventListener('change', () => {
+                suffixConfig[i].from = parseInt(fromSel.value, 10);
                 saveSuffixConfig();
-                refreshSuffixRows();
+                prevDisplay = '';
+                if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix);
+            });
+
+            untilSel.addEventListener('change', () => {
+                suffixConfig[i].until = parseInt(untilSel.value, 10);
+                saveSuffixConfig();
                 prevDisplay = '';
                 if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix);
             });
