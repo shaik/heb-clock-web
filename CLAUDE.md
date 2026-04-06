@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A single-file web application that displays the current time as a natural Hebrew spoken phrase (e.g., "רבע אחרי שש בבוקר"). No build tools, no dependencies, no package manager — the entire app lives in `index.html`.
 
-**Live demo:** shaik.github.io/heb-clock-web
+**Live demo:** mahashaa.com
 
 ## Development
 
@@ -35,7 +35,7 @@ The core of the app. `getHebrewTime(date)` computes:
 1. Snaps current time to the nearest 5-minute anchor using a 300-second rounding window
 2. Selects the appropriate Hebrew phrase from `PLAIN` / `NIQQUD` data objects
 3. Adds a "קצת לפני/אחרי" modifier when within ±60 seconds of an anchor boundary
-4. Appends a day-part suffix (בבוקר/בערב/בלילה) based on hour ranges; midday (10–17h) has no suffix
+4. Appends a day-part suffix via a configurable range-based system (7 slots, each with from/until hours); returns the first enabled slot whose range covers the effective hour
 
 **`spec.md` is the authoritative reference** for all algorithm logic, text data (including niqqud variants), edge cases, and display behavior. Read it before modifying time logic or Hebrew text.
 
@@ -45,7 +45,9 @@ The core of the app. `getHebrewTime(date)` computes:
 |---|---|
 | `getHebrewTime(date)` | Main algorithm → `{modifier, phrase, suffix}` |
 | `buildPhrase(anchorHour24, anchorMinute)` | Constructs Hebrew phrase for a given anchor |
-| `dayPartSuffix(hour24)` | Returns the בבוקר/בערב/בלילה suffix |
+| `dayPartSuffix(hour24)` | Range-based suffix lookup; returns text of first matching enabled slot, or '' |
+| `refreshSuffixRows()` | Rebuilds the suffix settings UI rows from `suffixConfig` |
+| `enforceOverlapFrom(i)` | (removed) Replaced by explicit from/until ranges |
 | `renderTime(modifier, phrase, suffix)` | Updates DOM with 350ms fade transition |
 | `tick()` | Called every second; drives the clock |
 | `getSunTimes(date, lat, lng)` | Solar declination for auto dark/light theme |
@@ -53,12 +55,15 @@ The core of the app. `getHebrewTime(date)` computes:
 
 ### State & Persistence
 
-9 `localStorage` keys persist user settings across sessions:
-`hc_font`, `hc_fontVW`, `hc_digital`, `hc_split`, `hc_suffix`, `hc_niqqud`, `hc_theme`, `hc_lat`/`hc_lng`, `hc_seen`
+11 `localStorage` keys persist user settings across sessions:
+`hc_font`, `hc_fontVW`, `hc_digital`, `hc_split`, `hc_suffix_on`, `hc_suffixes`, `hc_niqqud`, `hc_theme`, `hc_lat`/`hc_lng`, `hc_seen`
+
+- `hc_suffix_on` — master suffix toggle (boolean string, default `true`)
+- `hc_suffixes` — JSON array of `{enabled, from, until}` for each of the 7 suffix slots
 
 ### Settings Panel
 
-Hidden behind a pill handle at the bottom of the screen. Revealed on hover (desktop) or tap (mobile). Controls: font family (7 options), font size (vw-based), digital clock toggle, modifier split, niqqud toggle, theme cycle (auto/day/night), demo mode (50× speed), wake lock, fullscreen, PWA install, Android widget link.
+Hidden behind a pill handle at the bottom of the screen. Revealed on hover (desktop) or tap (mobile). Controls: font family (7 options), font size (vw-based), digital clock toggle, modifier split, configurable suffix settings (master toggle + 7 slots with from/until), niqqud toggle, theme cycle (auto/day/night, default night), demo mode (50× speed), wake lock, fullscreen, PWA install, Android widget link.
 
 ### Theming
 

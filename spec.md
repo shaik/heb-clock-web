@@ -143,12 +143,25 @@ The **effective hour** for the suffix:
 - Anchors :00–:40 → use the anchor's hour
 - Anchors :45–:55 → use `(anchorHour + 1) % 24`
 
-| Effective hour (24h) | Suffix (plain) | Suffix (niqqud)  |
-|---------------------|---------------|-----------------|
-| 05:00–09:59         | בבוקר          | בַּבֹּקֶר           |
-| 10:00–17:59         | *(none)*       | *(none)*        |
-| 18:00–21:59         | בערב           | בָּעֶרֶב           |
-| 22:00–04:59         | בלילה          | בַּלַּיְלָה          |
+The suffix system is fully user-configurable (see §5.9). There are 7 possible suffix slots; each has an enabled flag, a `from` hour, and an `until` hour. Evaluation iterates the slots in definition order and returns the **first** enabled slot whose range covers the effective hour. If no slot matches, no suffix is shown.
+
+**Range check:**
+- If `from < until`: matches when `h >= from && h < until`
+- If `from >= until` (wraps midnight): matches when `h >= from || h < until`
+
+**Default configuration:**
+
+| Suffix (plain)       | Suffix (niqqud)           | Default | From  | Until |
+|---------------------|--------------------------|---------|-------|-------|
+| לפנות בוקר           | לִפְנוֹת בֹּקֶר             | off     | 04:00 | 05:00 |
+| בבוקר                | בַּבֹּקֶר                   | **on**  | 05:00 | 10:00 |
+| בצהריים              | בַּצָּהֳרַיִם                | off     | 12:00 | 14:00 |
+| אחרי הצהריים         | אַחֲרֵי הַצָּהֳרַיִם          | off     | 16:00 | 18:00 |
+| לפנות ערב            | לִפְנוֹת עֶרֶב              | off     | 17:00 | 18:00 |
+| בערב                 | בָּעֶרֶב                    | **on**  | 19:00 | 20:00 |
+| בלילה                | בַּלַּיְלָה                  | **on**  | 22:00 | 05:00 |
+
+With the defaults (בבוקר 05–10, בערב 19–20, בלילה 22–05), hours 10–18 and 20–22 have no suffix.
 
 ### 3.7 Full Example Table (around 07:15)
 
@@ -323,13 +336,26 @@ Controls whether "קצת לפני/אחרי" appears on its own line (split, defa
 
 Persisted: `hc_split` (default: `true`)
 
-### 5.9 Day-Part Suffix Visibility
+### 5.9 Day-Part Suffix Settings
 
-Label: `בוקר / ערב` | Control: toggle button (`הסתר` / `הצג`)
+Label: `השתמש בסיומת שעה` (with master checkbox) | Reset button: `ברירת מחדל`
 
-Hides or shows the day-part suffix (בבוקר, בערב, בלילה). Visible by default.
+The suffix section is a visually grouped block inside the settings panel. It contains:
 
-Persisted: `hc_suffix` (default: `true`)
+**Master toggle** — a checkbox next to the label "השתמש בסיומת שעה". When unchecked, all suffix rows are disabled and no suffix is displayed. Checked by default.
+
+**7 suffix rows** — one per suffix slot (see §3.6 defaults). Each row contains:
+- A checkbox (enable/disable this suffix)
+- The suffix Hebrew label
+- A `from` hour selector (`00:00`–`23:00`)
+- A `–` separator
+- An `until` hour selector (`00:00`–`23:00`)
+
+When the master toggle is unchecked, all per-suffix checkboxes and time selectors are disabled. When a per-suffix checkbox is unchecked, its time selectors are disabled.
+
+**"ברירת מחדל" button** — resets all suffix slots and the master toggle to their defaults.
+
+Persisted: `hc_suffix_on` (boolean string, default: `true`), `hc_suffixes` (JSON array of `{enabled, from, until}` per slot)
 
 ### 5.10 Niqqud
 
@@ -359,7 +385,7 @@ sunset      = solarNoon + hourAngle
 ```
 If `|cosH| > 1` (polar day/night), return null and use fixed fallback.
 
-Geolocation cached: `hc_lat`, `hc_lng`. Persisted: `hc_theme` (default: `auto`)
+Geolocation cached: `hc_lat`, `hc_lng`. Persisted: `hc_theme` (default: `night`)
 
 ### 5.12 Demo Mode (הדגמה)
 
@@ -405,18 +431,19 @@ Version should be bumped with every change, using the scheme: `v1.9` → `v1.91`
 
 ## 6. localStorage Keys
 
-| Key          | Type    | Default     | Description                          |
-|-------------|---------|-------------|--------------------------------------|
-| `hc_fontVW` | float   | `6.5`       | Font size in vw units                |
-| `hc_font`   | string  | `secular`   | Selected font family ID              |
-| `hc_digital`| string  | `hidden`    | Digital clock visibility             |
-| `hc_split`  | string  | `true`      | Modifier on separate line            |
-| `hc_suffix` | string  | `true`      | Day-part suffix visibility           |
-| `hc_niqqud` | string  | `true`      | Niqqud diacritics enabled            |
-| `hc_theme`  | string  | `auto`      | Theme mode (`auto`/`day`/`night`)    |
-| `hc_lat`    | float   | *(none)*    | Cached geolocation latitude          |
-| `hc_lng`    | float   | *(none)*    | Cached geolocation longitude         |
-| `hc_seen`   | string  | *(none)*    | `'1'` after first settings interaction|
+| Key            | Type    | Default     | Description                                        |
+|---------------|---------|-------------|----------------------------------------------------|
+| `hc_fontVW`   | float   | `6.5`       | Font size in vw units                              |
+| `hc_font`     | string  | `secular`   | Selected font family ID                            |
+| `hc_digital`  | string  | `hidden`    | Digital clock visibility                           |
+| `hc_split`    | string  | `true`      | Modifier on separate line                          |
+| `hc_suffix_on`| string  | `true`      | Master suffix enable/disable                       |
+| `hc_suffixes` | JSON    | *(see §3.6)*| Array of `{enabled, from, until}` per suffix slot  |
+| `hc_niqqud`   | string  | `true`      | Niqqud diacritics enabled                          |
+| `hc_theme`    | string  | `night`     | Theme mode (`auto`/`day`/`night`)                  |
+| `hc_lat`      | float   | *(none)*    | Cached geolocation latitude                        |
+| `hc_lng`      | float   | *(none)*    | Cached geolocation longitude                       |
+| `hc_seen`     | string  | *(none)*    | `'1'` after first settings interaction             |
 
 ---
 
@@ -491,6 +518,19 @@ function getHebrewTime(date):
     return { modifier, phrase, suffix }
 
 
+function dayPartSuffix(hour24):
+    if not suffixMasterEnabled: return ""
+    h = ((hour24 % 24) + 24) % 24
+    for each slot in SUFFIX_DEFS (in order):
+        if not slot.enabled: continue
+        if slot.from < slot.until:
+            inRange = h >= slot.from and h < slot.until
+        else:                          // wraps midnight
+            inRange = h >= slot.from or h < slot.until
+        if inRange: return slot.text   // plain or niqqud
+    return ""
+
+
 function buildPhrase(anchorHour24, anchorMinute):
     h = to12(anchorHour24)
     switch anchorMinute:
@@ -519,7 +559,7 @@ function buildPhrase(anchorHour24, anchorMinute):
 ## 10. Edge Cases
 
 1. **Midnight (00:00)** → 12-hour conversion gives 12 → `שתים עשרה בלילה`
-2. **Noon (12:00)** → hour 12 → `שתים עשרה` (no suffix, 10–17 range)
+2. **Noon (12:00)** → hour 12 → `שתים עשרה` (no suffix by default — falls outside all enabled ranges)
 3. **Hour wrap via rounding** — at 23:57:30 the anchor rounds to 00:00 next day → hour becomes 0 → displays 12 with `בלילה`
 4. **Anchor at :45/:50/:55** — phrase references next hour; effective hour for suffix is also next hour
 5. **Day-part boundary at :45** — e.g., 21:45 → "רבע לעשר בלילה" (effective hour 22)

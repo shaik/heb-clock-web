@@ -2,7 +2,7 @@
 
 A web clock that displays the current time as a natural Hebrew phrase, the way you'd say it in conversation.
 
-**Live demo:** [shaik.github.io/heb-clock-web](https://shaik.github.io/heb-clock-web/)
+**Live demo:** [mahashaa.com](https://mahashaa.com)
 
 ## Examples
 
@@ -18,7 +18,7 @@ A web clock that displays the current time as a natural Hebrew phrase, the way y
 
 - **Spoken Hebrew time** — 5-minute anchors with natural phrasing (:00 through :55)
 - **Second-precision** — smoothly transitions between "קצת לפני" (a bit before), exact, and "קצת אחרי" (a bit after)
-- **Day-part suffixes** — בבוקר (morning), בערב (evening), בלילה (night)
+- **Configurable day-part suffixes** — 7 suffix slots (לפנות בוקר, בבוקר, בצהריים, אחרי הצהריים, לפנות ערב, בערב, בלילה), each with custom from/until times
 - **Niqqud mode** — optional vowel diacritics (e.g., שֶׁבַע וְרֶבַע בַּבֹּקֶר)
 - **Font family & size** — 7 font choices, size from 1.5 to 20vw
 - **Demo mode** — fast-forward through time to see all phrase transitions
@@ -39,10 +39,10 @@ Tap or click anywhere on the time text to open the settings panel:
 | גופן           | Choose from 7 font families                         |
 | גודל +/−      | Adjust font size (1.5–20vw) with buttons or dropdown|
 | שעון דיגיטלי  | Show or hide the digital clock                      |
-| קצת — שורה    | Show "קצת לפני/אחרי" on a separate line or inline   |
-| בוקר / ערב    | Show or hide the day-part suffix                    |
-| ניקוד          | Toggle Hebrew vowel diacritics                      |
-| תצוגה          | Light / dark / auto (solar-based) theme             |
+| קצת — שורה           | Show "קצת לפני/אחרי" on a separate line or inline                  |
+| השתמש בסיומת שעה    | Master toggle + 7 configurable suffix slots with from/until times  |
+| ניקוד                | Toggle Hebrew vowel diacritics                                      |
+| תצוגה                | Light / dark / auto (solar-based) theme (default: dark)             |
 | מסך דלוק      | Keep the screen from going to sleep                 |
 | מסך מלא       | Toggle fullscreen mode                              |
 | דמו            | Fast-forward demo mode (50x speed)                  |
@@ -53,6 +53,14 @@ All settings (except demo) are saved in localStorage.
 ## Tech
 
 Single `index.html` with inline CSS and JavaScript. Uses [Heebo](https://fonts.google.com/specimen/Heebo) and other Google Fonts. PWA-ready with a service worker and web app manifest.
+
+---
+
+## What's new in v2.19
+
+- **Custom domain** — now live at [mahashaa.com](https://mahashaa.com)
+- **Default dark theme** — night mode is now the default for new visitors
+- **Configurable suffix settings** — each of the 7 Hebrew day-part suffixes (לפנות בוקר, בבוקר, בצהריים, אחרי הצהריים, לפנות ערב, בערב, בלילה) can be independently enabled with custom from/until hours; a master toggle shows/hides all suffixes; a "ברירת מחדל" button resets to defaults
 
 ---
 
