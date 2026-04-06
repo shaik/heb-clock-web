@@ -138,7 +138,7 @@ class WidgetConfigActivity : Activity() {
 
     // ── Row builder ───────────────────────────────────────────────────────────
 
-    private fun buildSlotRow(index: Int, slot: HebTime.SuffixSlot): LinearLayout {
+    private fun buildSlotRow(@Suppress("UNUSED_PARAMETER") index: Int, slot: HebTime.SuffixSlot): LinearLayout {
         val dp = resources.displayMetrics.density
 
         val row = LinearLayout(this).apply {
@@ -199,7 +199,6 @@ class WidgetConfigActivity : Activity() {
 
         // Checkbox toggles its own spinners (and master state must also be on)
         chk.setOnCheckedChangeListener { _, isChecked ->
-            val masterOn = slotCheckboxes.isNotEmpty() // always true at this point
             fromSpinner.isEnabled  = isChecked
             untilSpinner.isEnabled = isChecked
         }
