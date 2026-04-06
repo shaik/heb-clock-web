@@ -5,7 +5,29 @@ import kotlin.math.roundToInt
 
 object HebTime {
 
-    // Plain (no niqqud)
+    // ── Suffix configuration ──────────────────────────────────────────────────
+
+    data class SuffixSlot(
+        val enabled: Boolean,
+        val from:    Int,   // 0-23 inclusive
+        val until:   Int,   // 0-23 exclusive (wraps if until <= from)
+        val plain:   String,
+        val niqqud:  String
+    )
+
+    /** Defaults mirror the web app defaults in index.html SUFFIX_DEFS. */
+    val SUFFIX_DEFAULTS = listOf(
+        SuffixSlot(false,  4,  5, "לפנות בוקר",    "לִפְנוֹת בֹּקֶר"),
+        SuffixSlot(true,   5, 10, "בבוקר",           "בַּבֹּקֶר"),
+        SuffixSlot(false, 12, 14, "בצהריים",         "בַּצָּהֳרַיִם"),
+        SuffixSlot(false, 16, 18, "אחרי הצהריים",    "אַחֲרֵי הַצָּהֳרַיִם"),
+        SuffixSlot(false, 17, 18, "לפנות ערב",       "לִפְנוֹת עֶרֶב"),
+        SuffixSlot(true,  19, 20, "בערב",            "בָּעֶרֶב"),
+        SuffixSlot(true,  22,  5, "בלילה",           "בַּלַּיְלָה")
+    )
+
+    // ── Plain (no niqqud) ─────────────────────────────────────────────────────
+
     private val hours = mapOf(
         1 to "אחת",        2 to "שתיים",       3 to "שלוש",
         4 to "ארבע",       5 to "חמש",          6 to "שש",
@@ -19,7 +41,8 @@ object HebTime {
         10 to "לעשר",      11 to "לאחת עשרה",  12 to "לשתים עשרה"
     )
 
-    // Niqqud
+    // ── Niqqud ────────────────────────────────────────────────────────────────
+
     private val hoursN = mapOf(
         1 to "אַחַת",       2 to "שְׁתַּיִם",     3 to "שָׁלוֹשׁ",
         4 to "אַרְבַּע",    5 to "חָמֵשׁ",         6 to "שֵׁשׁ",
@@ -33,10 +56,14 @@ object HebTime {
         10 to "לְעֶשֶׂר",  11 to "לְאַחַת עֶשְׂרֵה", 12 to "לִשְׁתֵּים עֶשְׂרֵה"
     )
 
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
     private fun to12(h24: Int): Int {
         val h = ((h24 % 24) + 24) % 24 % 12
         return if (h == 0) 12 else h
     }
+
+    // ── Phrase builder ────────────────────────────────────────────────────────
 
     fun buildPhrase(anchorHour24: Int, anchorMinute: Int, niqqud: Boolean = false): String {
         val h  = to12(anchorHour24)
@@ -74,19 +101,44 @@ object HebTime {
         }
     }
 
-    fun dayPartSuffix(hour24: Int, niqqud: Boolean = false): String {
+    // ── Day-part suffix (range-based, matches web app) ────────────────────────
+
+    /**
+     * Returns the day-part suffix for [hour24] based on configured [slots].
+     * Iterates slots in definition order; returns the text of the first enabled
+     * slot whose [from, until) range covers [hour24].
+     * Returns "" if [masterEnabled] is false or no slot matches.
+     */
+    fun dayPartSuffix(
+        hour24:        Int,
+        niqqud:        Boolean      = false,
+        masterEnabled: Boolean      = true,
+        slots:         List<SuffixSlot> = SUFFIX_DEFAULTS
+    ): String {
+        if (!masterEnabled) return ""
         val h = ((hour24 % 24) + 24) % 24
-        return when {
-            h in 5..9   -> if (niqqud) "בַּבֹּקֶר"  else "בבוקר"
-            h in 10..17 -> ""
-            h in 18..21 -> if (niqqud) "בָּעֶרֶב"   else "בערב"
-            else        -> if (niqqud) "בַּלַּיְלָה" else "בלילה"
+        for (slot in slots) {
+            if (!slot.enabled) continue
+            val inRange = if (slot.from < slot.until) {
+                h >= slot.from && h < slot.until
+            } else {                          // wraps midnight
+                h >= slot.from || h < slot.until
+            }
+            if (inRange) return if (niqqud) slot.niqqud else slot.plain
         }
+        return ""
     }
+
+    // ── Main entry point ──────────────────────────────────────────────────────
 
     data class HebrewTime(val modifier: String, val phrase: String, val suffix: String)
 
-    fun getHebrewTime(cal: Calendar = Calendar.getInstance(), niqqud: Boolean = false): HebrewTime {
+    fun getHebrewTime(
+        cal:           Calendar         = Calendar.getInstance(),
+        niqqud:        Boolean          = false,
+        suffixMasterEnabled: Boolean    = true,
+        suffixSlots:   List<SuffixSlot> = SUFFIX_DEFAULTS
+    ): HebrewTime {
         val hour24 = cal.get(Calendar.HOUR_OF_DAY)
         val minute = cal.get(Calendar.MINUTE)
         val second = cal.get(Calendar.SECOND)
@@ -109,6 +161,6 @@ object HebTime {
             else        -> ""
         }
         val effectiveHour = if (anchorMinute >= 45) (anchorHour + 1) % 24 else anchorHour
-        return HebrewTime(modifier, phrase, dayPartSuffix(effectiveHour, niqqud))
+        return HebrewTime(modifier, phrase, dayPartSuffix(effectiveHour, niqqud, suffixMasterEnabled, suffixSlots))
     }
 }

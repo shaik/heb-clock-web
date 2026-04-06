@@ -26,8 +26,14 @@ import androidx.glance.unit.ColorProvider
 class HebClockWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val niqqud    = WidgetPrefs.useNiqqud(context)
-        val t         = HebTime.getHebrewTime(niqqud = niqqud)
+        val niqqud      = WidgetPrefs.useNiqqud(context)
+        val suffixOn    = WidgetPrefs.showSuffix(context)
+        val suffixSlots = WidgetPrefs.suffixSlots(context)
+        val t           = HebTime.getHebrewTime(
+            niqqud             = niqqud,
+            suffixMasterEnabled = suffixOn,
+            suffixSlots        = suffixSlots
+        )
         val isDark    = WidgetPrefs.theme(context) == "dark"
         val compact   = WidgetPrefs.compactLabels(context)
         val fontSize  = WidgetPrefs.fontSize(context).sp
@@ -38,7 +44,7 @@ class HebClockWidget : GlanceAppWidget() {
             HebClockContent(
                 modifierText = if (WidgetPrefs.showModifier(context)) t.modifier else "",
                 phrase       = t.phrase,
-                suffix       = if (WidgetPrefs.showSuffix(context)) t.suffix else "",
+                suffix       = t.suffix,
                 isDark       = isDark,
                 fontSize     = fontSize,
                 labelSize    = labelSize,

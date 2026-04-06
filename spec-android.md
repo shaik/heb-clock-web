@@ -55,8 +55,12 @@ android/
 ### 4.1 Entry point
 
 ```kotlin
-HebTime.getHebrewTime(cal: Calendar = Calendar.getInstance(), niqqud: Boolean = false)
-    → HebrewTime(modifier: String, phrase: String, suffix: String)
+HebTime.getHebrewTime(
+    cal:                Calendar         = Calendar.getInstance(),
+    niqqud:             Boolean          = false,
+    suffixMasterEnabled: Boolean         = true,
+    suffixSlots:        List<SuffixSlot> = SUFFIX_DEFAULTS
+) → HebrewTime(modifier: String, phrase: String, suffix: String)
 ```
 
 ### 4.2 Text data
@@ -65,18 +69,28 @@ See `spec.md §7` for the full plain / niqqud text tables. Both sets are present
 
 - `hours` / `hoursN` — 12-hour names
 - `hoursL` / `hoursLN` — ל-prefixed forms for :45/:50/:55
-- Inline string literals for minute suffixes and day-part labels
+- Inline string literals for minute suffixes
+- `SUFFIX_DEFAULTS` — 7 `SuffixSlot` entries (plain + niqqud text + default times)
 
-### 4.3 Day-part suffix hour ranges
+### 4.3 Day-part suffix — configurable range-based system
 
-Same as web app (see `spec.md §3.6`):
+Identical to the web app (see `spec.md §3.6`). Each of 7 suffix slots has `enabled`, `from`, and `until` hours. `dayPartSuffix()` iterates slots in order and returns the text of the first enabled slot whose range covers the effective hour; wrapping is supported (`from > until` = wraps midnight).
 
-| Effective hour (24h) | Suffix (plain) | Suffix (niqqud)  |
-|---------------------|----------------|-----------------|
-| 05–09               | בבוקר           | בַּבֹּקֶר           |
-| 10–17               | *(none)*        | *(none)*        |
-| 18–21               | בערב            | בָּעֶרֶב           |
-| 22–04               | בלילה           | בַּלַּיְלָה          |
+```kotlin
+data class SuffixSlot(enabled: Boolean, from: Int, until: Int, plain: String, niqqud: String)
+```
+
+**Default slots** (stored in `HebTime.SUFFIX_DEFAULTS`):
+
+| Suffix (plain)    | Default | From  | Until |
+|------------------|---------|-------|-------|
+| לפנות בוקר        | off     | 04:00 | 05:00 |
+| בבוקר             | **on**  | 05:00 | 10:00 |
+| בצהריים           | off     | 12:00 | 14:00 |
+| אחרי הצהריים      | off     | 16:00 | 18:00 |
+| לפנות ערב         | off     | 17:00 | 18:00 |
+| בערב              | **on**  | 19:00 | 20:00 |
+| בלילה             | **on**  | 22:00 | 05:00 |
 
 ---
 
@@ -141,13 +155,17 @@ Modifier and suffix are always 13sp regardless of the main font size setting.
 
 Stored in `SharedPreferences` file `"widget_prefs"`. Accessed via `WidgetPrefs.kt`.
 
-| Pref key       | Type    | Default | Description |
-|---------------|---------|---------|-------------|
-| `theme`        | String  | `"dark"` | `"dark"` or `"light"` |
-| `show_suffix`  | Boolean | `true`  | Show day-part suffix |
-| `show_modifier`| Boolean | `true`  | Show קצת לפני/אחרי modifier |
-| `use_niqqud`   | Boolean | `false` | Use niqqud vowel marks |
-| `font_size`    | Int     | `26`    | Main phrase size in sp (20/26/32) |
+| Pref key                | Type    | Default        | Description |
+|------------------------|---------|----------------|-------------|
+| `theme`                 | String  | `"dark"`       | `"dark"` or `"light"` |
+| `show_suffix`           | Boolean | `true`         | Master toggle: show/hide all day-part suffixes |
+| `suffix_N_enabled`      | Boolean | per slot       | Whether slot N (0–6) is enabled |
+| `suffix_N_from`         | Int     | per slot       | From-hour for slot N (0–23) |
+| `suffix_N_until`        | Int     | per slot       | Until-hour for slot N (0–23); wraps if ≤ from |
+| `show_modifier`         | Boolean | `true`         | Show קצת לפני/אחרי modifier |
+| `use_niqqud`            | Boolean | `true`         | Use niqqud vowel marks |
+| `font_size`             | Int     | `26`           | Main phrase size in sp (20/26/32) |
+| `compact_labels`        | Boolean | `false`        | Compact modifier/suffix labels |
 
 ---
 
