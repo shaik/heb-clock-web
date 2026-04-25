@@ -614,6 +614,7 @@
         }
 
         .splash-option:hover { background: rgba(0, 0, 0, 0.08); }
+        .splash-option-disabled { opacity: 0.45; cursor: default; pointer-events: none; }
 
         .splash-option-title {
             font-size: 0.95rem;
@@ -675,7 +676,7 @@
             background: #ddd;
             border-radius: 1px;
             transform-origin: right;
-            animation: splashProgress 4s linear forwards;
+            animation: splashProgress 2.4s linear forwards;
         }
 
         @keyframes splashProgress {
@@ -721,10 +722,10 @@
                     <div class="splash-option-title">אפליקציה לכרום</div>
                     <div class="splash-option-desc">התקן ישירות מהדפדפן</div>
                 </button>
-                <a class="splash-option" href="https://shaik.github.io/heb-clock-web/widget.html" target="_blank" id="splashAndroid">
+                <div class="splash-option splash-option-disabled" id="splashAndroid">
                     <div class="splash-option-title">ווידג׳ט לאנדרואיד</div>
-                    <div class="splash-option-desc">שעון על מסך הבית</div>
-                </a>
+                    <div class="splash-option-desc">בקרוב</div>
+                </div>
             </div>
             <div class="splash-footer">
                 <span>לחיצה על השעה פותחת את ההגדרות</span>
@@ -829,7 +830,7 @@
 
                 <div class="panel-footer">
                     <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
-                    <span class="version">v2.19</span>
+                    <span class="version">v2.20</span>
                 </div>
             </div>
         </div>
@@ -1538,7 +1539,7 @@
 
     if (!localStorage.getItem('hc_seen')) {
         elSplash.style.display = '';
-        splashTimer = setTimeout(dismissSplash, 4000);
+        splashTimer = setTimeout(dismissSplash, 2400);
     }
 
     elSplashClose.addEventListener('click', dismissSplash);
@@ -1556,7 +1557,6 @@
         }
     });
 
-    document.getElementById('splashAndroid').addEventListener('click', dismissSplash);
 
     // Service worker registration
     if ('serviceWorker' in navigator) {
