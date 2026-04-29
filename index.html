@@ -340,6 +340,8 @@
 
         body.dark .suffix-group { background: rgba(255, 255, 255, 0.04); }
         body.dark .suffix-group-header { border-bottom-color: rgba(255, 255, 255, 0.07) !important; }
+        .suffix-group-header.suffix-collapsed { border-bottom: none !important; }
+        .suffix-expand-btn { padding: 0 12px !important; font-size: 1rem !important; }
 
         .font-select {
             height: 38px;
@@ -783,14 +785,19 @@
                 </div>
 
                 <div class="suffix-group">
-                    <div class="settings-row suffix-group-header">
+                    <div class="settings-row suffix-group-header suffix-collapsed" id="suffixGroupHeader">
                         <label class="suffix-chk-label">
                             <input type="checkbox" class="suffix-chk" id="suffixMasterChk">
                             <span class="row-label">השתמש בסיומת שעה</span>
                         </label>
-                        <button class="toggle-btn" id="suffixResetBtn">ברירת מחדל</button>
+                        <button class="toggle-btn suffix-expand-btn" id="suffixExpandBtn">▾</button>
                     </div>
-                    <div id="suffixRows"></div>
+                    <div id="suffixExpandable" style="display:none">
+                        <div class="settings-row" style="justify-content:flex-end">
+                            <button class="toggle-btn" id="suffixResetBtn">ברירת מחדל</button>
+                        </div>
+                        <div id="suffixRows"></div>
+                    </div>
                 </div>
 
                 <div class="settings-row">
@@ -830,7 +837,7 @@
 
                 <div class="panel-footer">
                     <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
-                    <span class="version">v2.20</span>
+                    <span class="version">v2.21</span>
                 </div>
             </div>
         </div>
@@ -1280,6 +1287,16 @@
         refreshSuffixRows();
         prevDisplay = '';
         if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix);
+    });
+
+    document.getElementById('suffixExpandBtn').addEventListener('click', () => {
+        const expandable = document.getElementById('suffixExpandable');
+        const header = document.getElementById('suffixGroupHeader');
+        const btn = document.getElementById('suffixExpandBtn');
+        const isOpen = expandable.style.display !== 'none';
+        expandable.style.display = isOpen ? 'none' : 'block';
+        header.classList.toggle('suffix-collapsed', isOpen);
+        btn.textContent = isOpen ? '▾' : '▴';
     });
 
     document.getElementById('suffixResetBtn').addEventListener('click', () => {

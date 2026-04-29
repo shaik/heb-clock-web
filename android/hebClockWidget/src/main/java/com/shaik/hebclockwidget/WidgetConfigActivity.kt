@@ -7,6 +7,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
+import android.view.View
 import android.widget.*
 import androidx.glance.appwidget.updateAll
 import kotlinx.coroutines.MainScope
@@ -41,8 +42,10 @@ class WidgetConfigActivity : Activity() {
         val rgFontSize     = findViewById<RadioGroup>(R.id.rg_font_size)
         val btnSave        = findViewById<Button>(R.id.btn_save)
         val tvVersion      = findViewById<TextView>(R.id.tv_version)
-        val slotContainer  = findViewById<LinearLayout>(R.id.suffix_slots_container)
-        val slotLabel      = findViewById<TextView>(R.id.tv_suffix_slots_label)
+        val slotContainer    = findViewById<LinearLayout>(R.id.suffix_slots_container)
+        val slotLabel        = findViewById<TextView>(R.id.tv_suffix_slots_label)
+        val btnSuffixExpand  = findViewById<Button>(R.id.btn_suffix_expand)
+        var suffixExpanded   = false
 
         val version = packageManager.getPackageInfo(packageName, 0).versionName
         tvVersion.text = "v$version"
@@ -70,9 +73,19 @@ class WidgetConfigActivity : Activity() {
             slotContainer.addView(row)
         }
 
+        // ── Expand/collapse slot schedule ─────────────────────────────────────
+        btnSuffixExpand.setOnClickListener {
+            suffixExpanded = !suffixExpanded
+            slotContainer.visibility = if (suffixExpanded) View.VISIBLE else View.GONE
+            btnSuffixExpand.text = if (suffixExpanded) "▴" else "▾"
+        }
+
         // ── Master toggle wires to slot rows ──────────────────────────────────
         fun applyMasterState(on: Boolean) {
-            slotLabel.alpha = if (on) 1f else 0.4f
+            val dimmed = if (on) 1f else 0.4f
+            slotLabel.alpha = dimmed
+            btnSuffixExpand.alpha = dimmed
+            btnSuffixExpand.isEnabled = on
             slotCheckboxes.forEachIndexed { i, chk ->
                 chk.isEnabled = on
                 slotFromSpinners[i].isEnabled  = on && chk.isChecked
