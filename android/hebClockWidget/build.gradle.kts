@@ -4,6 +4,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.github.triplet.play")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 val localProps = Properties().apply {
@@ -19,8 +20,8 @@ android {
         applicationId = "com.shaik.hebclockwidget"
         minSdk = 26
         targetSdk = 35
-        versionCode = 13
-        versionName = "1.21"
+        versionCode = 14
+        versionName = "1.22"
     }
 
     signingConfigs {
@@ -60,9 +61,6 @@ android {
     }
     buildFeatures {
         compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.8"
     }
 }
 
