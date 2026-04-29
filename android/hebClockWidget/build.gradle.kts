@@ -20,8 +20,8 @@ android {
         applicationId = "com.shaik.hebclockwidget"
         minSdk = 26
         targetSdk = 35
-        versionCode = 14
-        versionName = "1.22"
+        versionCode = 15
+        versionName = "1.23"
     }
 
     signingConfigs {
