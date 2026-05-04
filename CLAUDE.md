@@ -21,11 +21,11 @@ Bump the version with **every change**, using a minor decimal scheme: `v1.9` →
 
 ## Architecture
 
-### Web App (`index.html`, 1113 lines)
+### Web App (`index.html`, ~1700 lines)
 
 - **Lines 1–17**: HTML structure and Google Fonts imports
 - **Lines 18–431**: Inline CSS (theming, layout, settings panel, animations)
-- **Lines 529–1113**: Inline JavaScript (all app logic)
+- **Lines 529–end**: Inline JavaScript (all app logic)
 
 The single custom font is `fonts/fridge_Regular.ttf`.
 
@@ -43,27 +43,30 @@ The core of the app. `getHebrewTime(date)` computes:
 
 | Function | Purpose |
 |---|---|
-| `getHebrewTime(date)` | Main algorithm → `{modifier, phrase, suffix}` |
-| `buildPhrase(anchorHour24, anchorMinute)` | Constructs Hebrew phrase for a given anchor |
+| `getHebrewTime(date)` | Fuzzy algorithm → `{modifier, phrase, suffix, forceSplit}` |
+| `buildPhrase(anchorHour24, anchorMinute)` | Constructs fuzzy Hebrew phrase for a given 5-min anchor |
+| `getExactTime(date)` | Exact-minute algorithm → `{modifier, phrase, suffix, forceSplit}` |
+| `buildExactPhrase(hour24, minute)` | Constructs exact Hebrew phrase for any minute 0–59 |
+| `isLongExactPhrase(minute)` | Returns true for "N דקות" minutes (1–4, 6–9, 11–14, 16–19) that auto-split |
 | `dayPartSuffix(hour24)` | Range-based suffix lookup; returns text of first matching enabled slot, or '' |
 | `refreshSuffixRows()` | Rebuilds the suffix settings UI rows from `suffixConfig` |
-| `enforceOverlapFrom(i)` | (removed) Replaced by explicit from/until ranges |
-| `renderTime(modifier, phrase, suffix)` | Updates DOM with 350ms fade transition |
+| `renderTime(modifier, phrase, suffix, forceSplit)` | Updates DOM with 350ms fade transition; forceSplit puts modifier on its own line regardless of user split setting |
 | `tick()` | Called every second; drives the clock |
 | `getSunTimes(date, lat, lng)` | Solar declination for auto dark/light theme |
 | `applyFontFamily()` | Applies selected font; disables niqqud for Fridge font |
 
 ### State & Persistence
 
-11 `localStorage` keys persist user settings across sessions:
-`hc_font`, `hc_fontVW`, `hc_digital`, `hc_split`, `hc_suffix_on`, `hc_suffixes`, `hc_niqqud`, `hc_theme`, `hc_lat`/`hc_lng`, `hc_seen`
+12 `localStorage` keys persist user settings across sessions:
+`hc_font`, `hc_fontVW`, `hc_digital`, `hc_split`, `hc_suffix_on`, `hc_suffixes`, `hc_niqqud`, `hc_theme`, `hc_lat`/`hc_lng`, `hc_seen`, `hc_exact`
 
 - `hc_suffix_on` — master suffix toggle (boolean string, default `true`)
 - `hc_suffixes` — JSON array of `{enabled, from, until}` for each of the 7 suffix slots
+- `hc_exact` — exact-minute mode (boolean string, default `false`; `true` = "על הדקה")
 
 ### Settings Panel
 
-Hidden behind a pill handle at the bottom of the screen. Revealed on hover (desktop) or tap (mobile). Controls: font family (7 options), font size (vw-based), digital clock toggle, modifier split, configurable suffix settings (master toggle + 7 slots with from/until), niqqud toggle, theme cycle (auto/day/night, default night), demo mode (50× speed), wake lock, fullscreen, PWA install, Android widget link.
+Hidden behind a pill handle at the bottom of the screen. Revealed on hover (desktop) or tap (mobile). Controls: font family (7 options), font size (vw-based), digital clock toggle, modifier split, accuracy dropdown (דיוק: "בערך" fuzzy / "על הדקה" exact-minute), configurable suffix settings (master toggle + 7 slots with from/until), niqqud toggle, theme cycle (auto/day/night, default night), demo mode (50× speed), wake lock, fullscreen, PWA install, Android widget link.
 
 ### Theming
 

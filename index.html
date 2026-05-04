@@ -783,6 +783,14 @@
                     <button class="toggle-btn" id="toggleSplit">שורה נפרדת</button>
                 </div>
 
+                <div class="settings-row">
+                    <span class="row-label">דיוק</span>
+                    <select class="font-size-select" id="exactMinuteSelect" style="width:auto;padding:0 0.7rem">
+                        <option value="approx">בערך</option>
+                        <option value="exact">על הדקה</option>
+                    </select>
+                </div>
+
                 <div class="suffix-group">
                     <div class="settings-row suffix-group-header suffix-collapsed" id="suffixGroupHeader">
                         <label class="suffix-chk-label">
@@ -836,7 +844,7 @@
 
                 <div class="panel-footer">
                     <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
-                    <span class="version">v2.22</span>
+                    <span class="version">v2.24</span>
                 </div>
             </div>
         </div>
@@ -879,6 +887,72 @@
         morning: 'בַּבֹּקֶר', evening: 'בָּעֶרֶב', night: 'בַּלַּיְלָה',
     };
 
+    // Exact-minute phrase data (niqqud)
+    const EXACT_NIQQUD = {
+        m: {
+            1:  ' וְדַקָּה',
+            2:  ' וּשְׁתֵּי דַּקּוֹת',
+            3:  ' וְשָׁלוֹשׁ דַּקּוֹת',
+            4:  ' וְאַרְבַּע דַּקּוֹת',
+            5:  ' וַחֲמִשָּׁה',
+            6:  ' וָשֵׁשׁ דַּקּוֹת',
+            7:  ' וְשֶׁבַע דַּקּוֹת',
+            8:  ' וּשְׁמוֹנֶה דַּקּוֹת',
+            9:  ' וְתֵשַׁע דַּקּוֹת',
+            10: ' וַעֲשָׂרָה',
+            11: ' וְאַחַת עֶשְׂרֵה דַּקּוֹת',
+            12: ' וּשְׁתֵּים עֶשְׂרֵה דַּקּוֹת',
+            13: ' וּשְׁלוֹשׁ עֶשְׂרֵה דַּקּוֹת',
+            14: ' וְאַרְבַּע עֶשְׂרֵה דַּקּוֹת',
+            15: ' וָרֶבַע',
+            16: ' וְשֵׁשׁ עֶשְׂרֵה דַּקּוֹת',
+            17: ' וּשְׁבַע עֶשְׂרֵה דַּקּוֹת',
+            18: ' וּשְׁמוֹנֶה עֶשְׂרֵה דַּקּוֹת',
+            19: ' וּתְשַׁע עֶשְׂרֵה דַּקּוֹת',
+            20: ' וְעֶשְׂרִים',
+        },
+        tens: { 20: 'עֶשְׂרִים', 30: 'שְׁלוֹשִׁים', 40: 'אַרְבָּעִים', 50: 'חֲמִשִּׁים' },
+        u: {
+            1: ' וְאַחַת', 2: ' וּשְׁתַּיִם', 3: ' וְשָׁלוֹשׁ', 4: ' וְאַרְבַּע',
+            5: ' וְחָמֵשׁ', 6: ' וָשֵׁשׁ', 7: ' וְשֶׁבַע', 8: ' וּשְׁמוֹנֶה', 9: ' וְתֵשַׁע',
+        },
+        m30: ' וָחֵצִי',
+        m40: ' אַרְבָּעִים',
+    };
+
+    // Exact-minute phrase data (plain, no niqqud)
+    const EXACT_PLAIN = {
+        m: {
+            1:  ' ודקה',
+            2:  ' ושתי דקות',
+            3:  ' ושלוש דקות',
+            4:  ' וארבע דקות',
+            5:  ' וחמישה',
+            6:  ' ושש דקות',
+            7:  ' ושבע דקות',
+            8:  ' ושמונה דקות',
+            9:  ' ותשע דקות',
+            10: ' ועשרה',
+            11: ' ואחת עשרה דקות',
+            12: ' ושתים עשרה דקות',
+            13: ' ושלוש עשרה דקות',
+            14: ' וארבע עשרה דקות',
+            15: ' ורבע',
+            16: ' ושש עשרה דקות',
+            17: ' ושבע עשרה דקות',
+            18: ' ושמונה עשרה דקות',
+            19: ' ותשע עשרה דקות',
+            20: ' ועשרים',
+        },
+        tens: { 20: 'עשרים', 30: 'שלושים', 40: 'ארבעים', 50: 'חמישים' },
+        u: {
+            1: ' ואחת', 2: ' ושתיים', 3: ' ושלוש', 4: ' וארבע',
+            5: ' וחמש', 6: ' ושש', 7: ' ושבע', 8: ' ושמונה', 9: ' ותשע',
+        },
+        m30: ' וחצי',
+        m40: ' ארבעים',
+    };
+
     const SUFFIX_DEFS = [
         { id: 'lifnot_boker', plain: 'לפנות בוקר',    niqqud: 'לִפְנוֹת בֹּקֶר',       defaultEnabled: false, defaultFrom: 4,  defaultUntil: 5  },
         { id: 'baboker',      plain: 'בבוקר',           niqqud: 'בַּבֹּקֶר',              defaultEnabled: true,  defaultFrom: 5,  defaultUntil: 10 },
@@ -917,6 +991,26 @@
             case 55: return txt.p55 + txt.hoursL[to12(anchorHour24 + 1)];
             default: return name;
         }
+    }
+
+    function buildExactPhrase(hour24, minute) {
+        const et = useNiqqud ? EXACT_NIQQUD : EXACT_PLAIN;
+        const h = to12(hour24);
+        const hourName = txt.hours[h];
+        if (minute === 0)  return hourName;
+        if (minute <= 20)  return hourName + et.m[minute];
+        if (minute === 30) return hourName + et.m30;
+        if (minute === 40) return hourName + et.m40;
+        if (minute === 45) return txt.p45 + txt.hoursL[to12(hour24 + 1)];
+        if (minute === 50) return txt.p50 + txt.hoursL[to12(hour24 + 1)];
+        if (minute === 55) return txt.p55 + txt.hoursL[to12(hour24 + 1)];
+        const tens = Math.floor(minute / 10) * 10;
+        const unit = minute % 10;
+        return hourName + ' ' + et.tens[tens] + et.u[unit];
+    }
+
+    function isLongExactPhrase(minute) {
+        return minute > 0 && minute <= 19 && minute % 5 !== 0;
     }
 
     function dayPartSuffix(hour24) {
@@ -966,6 +1060,19 @@
         return { modifier, phrase, suffix: dayPartSuffix(effectiveHour) };
     }
 
+    function getExactTime(date) {
+        const hour24 = date.getHours();
+        const minute  = date.getMinutes();
+        const effectiveHour = minute >= 45 ? (hour24 + 1) % 24 : hour24;
+        const suffix = dayPartSuffix(effectiveHour);
+        if (isLongExactPhrase(minute)) {
+            const hourName   = txt.hours[to12(hour24)];
+            const minutePart = (useNiqqud ? EXACT_NIQQUD : EXACT_PLAIN).m[minute].trim();
+            return { modifier: hourName, phrase: minutePart, suffix, forceSplit: true };
+        }
+        return { modifier: '', phrase: buildExactPhrase(hour24, minute), suffix, forceSplit: false };
+    }
+
     function pad2(n) { return String(n).padStart(2, '0'); }
 
     const elDigital  = document.getElementById('digitalTime');
@@ -996,15 +1103,16 @@
     }
     let suffixConfig = loadSuffixConfig();
     let suffixMasterEnabled = localStorage.getItem('hc_suffix_on') !== 'false';
+    let exactMinuteMode = localStorage.getItem('hc_exact') === 'true';
 
     let fadeTimeout = null;
 
-    function renderTime(modifier, phrase, suffix) {
+    function renderTime(modifier, phrase, suffix, forceSplit = false) {
         let modLine = '';
         let mainLine = phrase;
 
         if (modifier) {
-            if (splitModifier) {
+            if (forceSplit || splitModifier) {
                 modLine = modifier;
             } else {
                 mainLine = modifier + ' ' + phrase;
@@ -1057,9 +1165,9 @@
 
         elDigital.textContent = pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds());
 
-        const { modifier, phrase, suffix } = getHebrewTime(now);
-        lastTime = { modifier, phrase, suffix };
-        renderTime(modifier, phrase, suffix);
+        const { modifier, phrase, suffix, forceSplit = false } = exactMinuteMode ? getExactTime(now) : getHebrewTime(now);
+        lastTime = { modifier, phrase, suffix, forceSplit };
+        renderTime(modifier, phrase, suffix, forceSplit);
     }
 
     function startTicker() {
@@ -1190,7 +1298,7 @@
             splitModifier ? 'שורה אחת' : 'שורה נפרדת';
         localStorage.setItem('hc_split', splitModifier);
         prevDisplay = '';
-        if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix);
+        if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix, lastTime.forceSplit);
     }
 
     applySplit();
@@ -1198,6 +1306,16 @@
     document.getElementById('toggleSplit').addEventListener('click', () => {
         splitModifier = !splitModifier;
         applySplit();
+    });
+
+    const elExactSelect = document.getElementById('exactMinuteSelect');
+    elExactSelect.value = exactMinuteMode ? 'exact' : 'approx';
+
+    elExactSelect.addEventListener('change', () => {
+        exactMinuteMode = elExactSelect.value === 'exact';
+        localStorage.setItem('hc_exact', exactMinuteMode);
+        prevDisplay = '';
+        tick();
     });
 
     function saveSuffixConfig() {
@@ -1260,21 +1378,21 @@
                 fromSel.disabled = untilSel.disabled = !chk.checked;
                 saveSuffixConfig();
                 prevDisplay = '';
-                if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix);
+                if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix, lastTime.forceSplit);
             });
 
             fromSel.addEventListener('change', () => {
                 suffixConfig[i].from = parseInt(fromSel.value, 10);
                 saveSuffixConfig();
                 prevDisplay = '';
-                if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix);
+                if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix, lastTime.forceSplit);
             });
 
             untilSel.addEventListener('change', () => {
                 suffixConfig[i].until = parseInt(untilSel.value, 10);
                 saveSuffixConfig();
                 prevDisplay = '';
-                if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix);
+                if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix, lastTime.forceSplit);
             });
         });
     }
@@ -1285,7 +1403,7 @@
         localStorage.setItem('hc_suffix_on', suffixMasterEnabled);
         refreshSuffixRows();
         prevDisplay = '';
-        if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix);
+        if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix, lastTime.forceSplit);
     });
 
     document.getElementById('suffixExpandBtn').addEventListener('click', () => {
@@ -1303,7 +1421,7 @@
         saveSuffixConfig();
         refreshSuffixRows();
         prevDisplay = '';
-        if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix);
+        if (lastTime) renderTime(lastTime.modifier, lastTime.phrase, lastTime.suffix, lastTime.forceSplit);
     });
 
     refreshSuffixRows();
