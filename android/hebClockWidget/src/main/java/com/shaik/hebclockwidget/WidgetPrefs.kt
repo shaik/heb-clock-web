@@ -76,6 +76,13 @@ object WidgetPrefs {
     fun setCompactLabels(ctx: Context, v: Boolean) =
         prefs(ctx).edit().putBoolean("compact_labels", v).apply()
 
+    /** Exact-minute mode (web "על הדקה"). When off, fuzzy 5-minute anchors. */
+    fun exactMinuteMode(ctx: Context): Boolean =
+        prefs(ctx).getBoolean("exact_minute", false)
+
+    fun setExactMinuteMode(ctx: Context, v: Boolean) =
+        prefs(ctx).edit().putBoolean("exact_minute", v).apply()
+
     // ── Internal ──────────────────────────────────────────────────────────────
 
     private fun prefs(ctx: Context) =

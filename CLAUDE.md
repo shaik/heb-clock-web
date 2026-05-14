@@ -10,7 +10,11 @@ A single-file web application that displays the current time as a natural Hebrew
 
 ## Development
 
-Open `index.html` directly in a browser. There is no build step, no server required, and no npm/node dependencies.
+**Web:** Open `index.html` directly in a browser. There is no build step, no server required, and no npm/node dependencies.
+
+**Android:** Build the widget APK with `cd android && ./gradlew :hebClockWidget:assembleRelease` (or `assembleDebug`). Output lands in `android/hebClockWidget/build/outputs/apk/`.
+
+**Parallel agent docs:** `AGENTS.md` (Codex) and `GEMINI.md` cover the same project for other AI tools. When making substantive changes to this file, mirror them there.
 
 ## Versioning
 
@@ -23,9 +27,10 @@ Bump the version with **every change**, using a minor decimal scheme: `v1.9` →
 
 ### Web App (`index.html`, ~1700 lines)
 
-- **Lines 1–17**: HTML structure and Google Fonts imports
-- **Lines 18–431**: Inline CSS (theming, layout, settings panel, animations)
-- **Lines 529–end**: Inline JavaScript (all app logic)
+- **Lines 1–20**: `<head>` — meta, manifest, GitHub-Pages→mahashaa redirect, analytics, Google Fonts imports
+- **Lines 21–707**: Inline `<style>` (theming, layout, settings panel, animations)
+- **Lines 709–852**: `<body>` markup (time text, settings panel, splash card)
+- **Lines 853–end**: Inline `<script>` (all app logic)
 
 The single custom font is `fonts/fridge_Regular.ttf`.
 
@@ -66,7 +71,7 @@ The core of the app. `getHebrewTime(date)` computes:
 
 ### Settings Panel
 
-Hidden behind a pill handle at the bottom of the screen. Revealed on hover (desktop) or tap (mobile). Controls: font family (7 options), font size (vw-based), digital clock toggle, modifier split, accuracy dropdown (דיוק: "בערך" fuzzy / "על הדקה" exact-minute), configurable suffix settings (master toggle + 7 slots with from/until), niqqud toggle, theme cycle (auto/day/night, default night), demo mode (50× speed), wake lock, fullscreen, PWA install, Android widget link.
+Opened by tapping/clicking the time text itself (added in v2.0); the pill handle at the bottom of the screen still works as a fallback. Controls: font family (7 options), font size (vw-based), digital clock toggle, modifier split, accuracy dropdown (דיוק: "בערך" fuzzy / "על הדקה" exact-minute), configurable suffix settings (master toggle + 7 slots with from/until), niqqud toggle, theme cycle (auto/day/night, default night), demo mode (50× speed), wake lock, fullscreen, PWA install, Android widget link.
 
 ### Theming
 
@@ -74,11 +79,11 @@ Dark/light mode can be auto (geolocation + solar calculation), forced day, or fo
 
 ## Android Widget
 
-Located in `android/hebClockWidget/`. A Jetpack Glance home-screen widget — no launcher activity, widget-only APK.
+Located in `android/hebClockWidget/`. A Jetpack Glance home-screen widget. The APK does include a minimal `MainActivity` (launcher entry), but the real product is the widget — `WidgetConfigActivity` is the screen users actually interact with (launched when adding/long-pressing the widget).
 
 **`spec-android.md` is the authoritative reference** for the Android widget. Read it before modifying widget logic.
 
-Key Kotlin files:
+Key Kotlin files (under `src/main/java/com/shaik/hebclockwidget/` — the directory is `java/` even though the files are `.kt`):
 
 | File | Purpose |
 |---|---|

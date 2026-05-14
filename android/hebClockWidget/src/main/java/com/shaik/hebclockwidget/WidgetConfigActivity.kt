@@ -36,6 +36,7 @@ class WidgetConfigActivity : Activity() {
 
         val rgTheme        = findViewById<RadioGroup>(R.id.rg_theme)
         val swSuffix       = findViewById<Switch>(R.id.sw_suffix)
+        val swExact        = findViewById<Switch>(R.id.sw_exact)
         val swModifier     = findViewById<Switch>(R.id.sw_modifier)
         val swNiqqud       = findViewById<Switch>(R.id.sw_niqqud)
         val swCompact      = findViewById<Switch>(R.id.sw_compact)
@@ -55,9 +56,18 @@ class WidgetConfigActivity : Activity() {
             if (WidgetPrefs.theme(this) == "dark") R.id.rb_dark else R.id.rb_light
         )
         swSuffix.isChecked   = WidgetPrefs.showSuffix(this)
+        swExact.isChecked    = WidgetPrefs.exactMinuteMode(this)
         swModifier.isChecked = WidgetPrefs.showModifier(this)
         swNiqqud.isChecked   = WidgetPrefs.useNiqqud(this)
         swCompact.isChecked  = WidgetPrefs.compactLabels(this)
+
+        // Fuzzy modifier toggle is irrelevant in exact-minute mode.
+        fun applyExactState(on: Boolean) {
+            swModifier.isEnabled = !on
+            swModifier.alpha = if (on) 0.4f else 1f
+        }
+        swExact.setOnCheckedChangeListener { _, isChecked -> applyExactState(isChecked) }
+        applyExactState(swExact.isChecked)
         rgFontSize.check(
             when (WidgetPrefs.fontSize(this)) {
                 20   -> R.id.rb_small
@@ -103,6 +113,7 @@ class WidgetConfigActivity : Activity() {
                 if (rgTheme.checkedRadioButtonId == R.id.rb_light) "light" else "dark"
             )
             WidgetPrefs.setShowSuffix(this, swSuffix.isChecked)
+            WidgetPrefs.setExactMinuteMode(this, swExact.isChecked)
             WidgetPrefs.setShowModifier(this, swModifier.isChecked)
             WidgetPrefs.setUseNiqqud(this, swNiqqud.isChecked)
             WidgetPrefs.setCompactLabels(this, swCompact.isChecked)
