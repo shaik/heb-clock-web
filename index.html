@@ -834,17 +834,17 @@
 
                 <div class="settings-row" id="installGroup" style="display:none">
                     <span class="row-label">התקנה</span>
-                    <button class="toggle-btn" id="installBtn">Install</button>
+                    <button class="toggle-btn" id="installBtn">Install on browser</button>
                 </div>
 
-                <div class="settings-row" id="androidRow" style="display:none">
+                <div class="settings-row" id="androidRow">
                     <span class="row-label">ווידג'ט אנדרואיד</span>
                     <a class="toggle-btn android-dl-btn" id="androidDlBtn" href="https://play.google.com/store/apps/details?id=com.shaik.hebclockwidget" target="_blank" rel="noopener">Google Play</a>
                 </div>
 
                 <div class="panel-footer">
                     <span class="credit">idea: <a href="https://www.facebook.com/groups/1742464739390368/?multi_permalinks=3854305164872971" target="_blank">Matty Mariansky</a></span>
-                    <span class="version">v2.25</span>
+                    <span class="version">v2.26</span>
                 </div>
             </div>
         </div>
@@ -1585,11 +1585,6 @@
         elInstallBtn.style.display = 'none';
         installPrompt = null;
     });
-
-    // Android widget download link — show only on Android devices
-    if (/android/i.test(navigator.userAgent)) {
-        document.getElementById('androidRow').style.display = '';
-    }
 
     // Wake Lock
     const elWakeLockRow = document.getElementById('wakeLockRow');
